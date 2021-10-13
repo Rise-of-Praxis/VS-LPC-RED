@@ -4,7 +4,7 @@
 	"description": "Enables creators on an LP MUD to remotely edit code through VS Code",
 	"preview": true,
 	"publisher": "rise-of-praxis",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"engines": {
 		"vscode": "^1.61.0"
 	},
@@ -27,6 +27,34 @@
 	"extensionDependencies": [
 		"undeadfish.vscode-lpc-lang"
 	],
+	"contributes": {
+		"configuration" : {
+			"title": "LPC Remote Editor for LP MUDs",
+			"properties": {
+				"[lpc-remote-ed].uri": {
+					"title": "Host",
+					"type": "string",
+					"description": "The uri used to connect to the MUD"
+				},
+				"[lpc-remote-ed].userName": {
+					"title": "User Name",
+					"type": "string",
+					"description": "The MUD username to use for the connection"
+				},
+				"[lpc-remote-ed].password": {
+					"title": "Password",
+					"type": "string",
+					"description": "The MUD password to use for the connection"
+				},
+				"[lpc-remote-ed].useOutputChannel": {
+					"title": "Use Debug Output Channel",
+					"type": "boolean",
+					"default": false,
+					"description": "Creates a channel in the Output Window containing debugging information."
+				}
+			}
+		}
+	},
 	"devDependencies": {
 		"@types/glob": "^7.1.4",
 		"@types/mocha": "^9.0.0",
