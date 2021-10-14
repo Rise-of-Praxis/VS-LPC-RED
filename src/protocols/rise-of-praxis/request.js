@@ -122,7 +122,7 @@ class RemoteEditorRequest extends EventEmitter
 	async #handshake()
 	{
 		const { userName, password } = this.#connectionOptions;
-		const response = await this.write(`login ${userName} ${password}\n`);
+		const response = await this.#write(`login ${userName} ${password}\n`);
 
 		if (response.statusCode === "100")
 		{
@@ -144,7 +144,7 @@ class RemoteEditorRequest extends EventEmitter
 	 * @async
 	 * @returns {Promise<RemoteEditorResponse>}
 	 */
-	write(data)
+	#write(data)
 	{
 		return new Promise((resolve, reject) =>
 		{
@@ -171,6 +171,14 @@ class RemoteEditorRequest extends EventEmitter
 			}
 
 			connection.on('data', handleServerResponse);
+			connection.on('error', (error) =>
+			{
+				reject(error);
+			});
+			connection.on('timeout', () =>
+			{
+				reject("Remote Editor response timed out");
+			});
 			connection.write(data);
 		});
 	}
@@ -203,19 +211,29 @@ class RemoteEditorRequest extends EventEmitter
 					reject('Remote Editor login failed');
 				}
 
-				// Write the data to the socket and wait for a response
-				const response = await this.write(data);
-				this.#log(`${data} -> Response: ${response.statusCode} ${response.status}`);
+				try
+				{
+					// Write the data to the socket and wait for a response
+					const response = await this.#write(data);
+					this.#log(`${data} -> Response: ${response.statusCode} ${response.status}`);
 
-				if (typeof (response.content) === "string")
-					this.#log(` -> Content is ${response.size} bytes long`);
+					if (typeof (response.content) === "string")
+						this.#log(` -> Content is ${response.size} bytes long`);
 
-				if (typeof (callback) === "function")
-					await callback(response, connection);
+					if (typeof (callback) === "function")
+						await callback(response, connection);
 
-				connection.write("quit\n");
-				connection.end();
-				resolve(response);
+					resolve(response);
+				}
+				catch (error)
+				{
+					reject(error);
+				}
+				finally
+				{
+					connection.write("quit\n");
+					connection.end();
+				}
 			});
 
 			const { host, port } = this.#connectionOptions;
