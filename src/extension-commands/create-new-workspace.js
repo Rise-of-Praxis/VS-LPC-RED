@@ -175,9 +175,10 @@ module.exports = async (context) =>
 		window.setStatusBarMessage(`Connected to ${uri} as ${userName}`, 1000);
 
 		// Save the workspace setup
+		const realmDirectory = `/realms/${name}`;
 		const folders = [
 			{ uri: client.getFileUri('/').toString(), name: mudName },
-			{ uri: client.getFileUri(`/realms/${name}`).toString(), name: "My Realm" }
+			{ uri: client.getFileUri(realmDirectory).toString(), name: `My Realm - ${realmDirectory}` }
 		];
 		const workspaceUri = await saveWorkspace(folders, connectionOptions);
 		if (!workspaceUri)
