@@ -1,17 +1,58 @@
-const { dirname } = require('path');
-const { EventEmitter, Uri, FileSystemError, Disposable, FileType } = require('vscode');
-const RemoteEditorClient = require('../client');
+const { EventEmitter, Uri, FileSystemError, Disposable, FileType, workspace, ConfigurationTarget, window } = require('vscode');
 const Directory = require('./directory');
+const File = require('./file');
+const createRemoteEditorClient = require('../client');
 
 class RemoteEditorFileSystem
 {
+	/** @type {RemoteEditorClient} */
+	#client;
+
+
 	/**
+	 * Creates a {@link File} or {@link Directory} for the file information provided
 	 * 
-	 * @param {RemoteEditorClient} client The client used to communicate with the remote editor 
+	 * @param {FileInfo} fileInfo The object containing the file information
+	 * @returns {File | Directory}
 	 */
-	constructor(client)
+	#createFileEntry(fileInfo)
 	{
-		this.client = client;
+		const fileMeta = { ...fileInfo };
+		fileMeta.uri = this.client.getFileUri(fileInfo.path);
+
+		if (fileMeta.type === FileType.Directory)
+			return new Directory(fileMeta);
+		else
+			return new File(fileMeta);
+	}
+
+	#createDirectoryEntry(path, listing) {
+		const directory = new Directory({ name: path });
+		const { entries } = directory;
+
+		listing.forEach((meta) => 
+		{
+			const fileEntry = this.#createFileEntry(meta);
+			entries.set(fileEntry.name, fileEntry);
+		});
+
+		return directory;
+	}
+
+	/**
+	 * The scheme to use in {@link Uri} for links
+	 */
+	get scheme()
+	{
+		return this.client.scheme;
+	}
+
+	get client()
+	{
+		if (!this.#client)
+			this.#client = createRemoteEditorClient();
+
+		return this.#client
 	}
 
 	/**
@@ -60,9 +101,11 @@ class RemoteEditorFileSystem
 		if (!results)
 			throw FileSystemError.FileNotFound(uri);
 
+		const directory = this.#createDirectoryEntry(uri.path, results);
+
 		/** @type {[string, FileType][]} */
 		const entries = [];
-		for (const [name, entry] of results.entries)
+		for (const [name, entry] of directory.entries)
 			entries.push([name, entry.type]);
 
 		return entries;
