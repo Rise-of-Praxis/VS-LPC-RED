@@ -977,6 +977,7 @@ dataType
 	|	Mixed
 	|	Object
 	|	String
+	|	Buffer
 	|	classIdentifier
 	|	array				// Deprecated in FluffOS v2019, should be switched to mixed *
 	;
