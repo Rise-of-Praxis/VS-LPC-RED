@@ -618,10 +618,6 @@ expression
 	|	castOperation
 	|	expression operator expression
 
-	//  String expressions
-	|	StringLiteral Add? expression
-	|	expression Add? StringLiteral
-
 	//	Ternary expression
     |   expression Question expression Colon expression
 
@@ -630,6 +626,9 @@ expression
 
 	//	Expansion expression (ie: array... expands it out to individual values)
 	|	expression Ellipsis
+
+	//	Support for "string" "string" concatenation
+	|	StringLiteral StringLiteral
     ;
 
 /*
@@ -701,7 +700,7 @@ literal
  * An LPC mapping declaration.  IE: ([ "myKey": "myValue" ])
  */
 mappingDeclaration
-	:	mappingStart mappingElementList? mappingEnd
+	:	mappingStart mappingElementList? Comma? mappingEnd
 	;
 
 /*
@@ -750,7 +749,7 @@ mappingValue
  * An LPC array declaration. ({ 1, 2, 3})
  */
 arrayDeclaration
-	:	arrayStart arrayElements? arrayEnd
+	:	arrayStart expressionList? Comma? arrayEnd
 	;
 
 /*
@@ -765,13 +764,6 @@ arrayStart
  */
 arrayEnd
 	:	RightBrace RightParen
-	;
-
-/*
- *	The members of an array
- */
-arrayElements
-	:	expressionList
 	;
 
 indexOperator
@@ -800,19 +792,30 @@ block
  * A statement is a set of expressions.
  */
 statement
-    :   expression SemiColon
+    :	variableDeclaration
+	|	expression SemiColon
 	|	conditionalStatement
-	|	loopStatement
-	|	returnStatement
 	|	switchStatement
-	|	variableDeclaration
-    |   SemiColon
-
-	//	Valid only in loop statements
-	| 	Break SemiColon 
-	| 	Continue SemiColon
-
+	|	loopStatement
+	| 	breakStatement 
+	| 	continueStatement
+	|	returnStatement
+	|	SemiColon
     ;
+
+/*
+ * Loop control break statement
+ */
+breakStatement
+	:	Break SemiColon
+	;
+
+/*
+ * Loop control continuation statement
+ */
+continueStatement
+	:	Continue SemiColon
+	;
 
 /*
  * Represents a statement or a block.
@@ -997,23 +1000,21 @@ identifier
  * If-Else statement
  */
 conditionalStatement
-    :   If LeftParen expression RightParen statementOrBlock
-	|	If LeftParen expression RightParen statementOrBlock Else statementOrBlock
+    :   If 
+			LeftParen expression RightParen 
+		statementOrBlock 
+		(Else statementOrBlock)?
     ;
 
 /*
  * A switch statement and block
  */
 switchStatement
-	: Switch LeftParen expression RightParen LeftBrace caseStatements? RightBrace
-	;
-
-/*
- * The set of case statements under the switch expression containing all the switch statements
- */
-caseStatements
-	:	caseStatement+ defaultSwitchStatement?
-	|	defaultSwitchStatement
+	: Switch LeftParen expression RightParen 
+		LeftBrace 
+		caseStatement*
+		defaultSwitchStatement?
+		RightBrace
 	;
 
 caseLabel
@@ -1026,12 +1027,12 @@ caseLabel
  * The case condition in a switch statement.  ie: case 1: statements
  */
 caseStatement
-	:	Case caseLabel Colon statement* (Break SemiColon)?
+	:	Case caseLabel Colon statement* breakStatement?
 	;
 
 /*
  * The default case statement.  ie: default: statements
  */
 defaultSwitchStatement
-	:	Default Colon statement* (Break SemiColon)?
+	:	Default Colon statement* breakStatement?
 	;
