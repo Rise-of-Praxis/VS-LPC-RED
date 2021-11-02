@@ -8,7 +8,7 @@
 		"content"
 	],
 	"publisher": "rise-of-praxis",
-	"version": "0.1.0-rc2",
+	"version": "0.2.0",
 	"engines": {
 		"vscode": "^1.61.0"
 	},
@@ -55,6 +55,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Enables LPC specific language features in VS Code, such as document outlines and refactoring support."
+				},
+				"lpcRemoteEditor.localWorkspace": {
+					"title": "Local workspace directory",
+					"type": "string",
+					"description": "If specified, the path to save local copies of modified files to."
 				}
 			}
 		}
