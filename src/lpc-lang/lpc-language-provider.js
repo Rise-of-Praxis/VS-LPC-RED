@@ -1,6 +1,7 @@
 const { Position, DocumentHighlight, DiagnosticCollection, TextDocument, CancellationToken, DocumentSymbol, WorkspaceEdit, languages, Location, SymbolKind, Range, window, workspace, Diagnostic, DiagnosticSeverity } = require("vscode");
 const { LPCParser } = require('./lpc-parser');
 const { LPCProgram } = require("./lpc-program");
+const { extname } = require("path");
 
 const cache = new Map();
 
@@ -12,7 +13,9 @@ const documentSymbolMapping = {
 
 const scopeBlocks = [
 	LPCParser.RULE_lpcProgram, LPCParser.RULE_block
-]
+];
+
+const LanguageId = "lpc";
 
 class LPCLanguageProvider
 {
@@ -678,6 +681,9 @@ class LPCLanguageProvider
 	 */
 	refreshDiagnostics(document, diagnosticCollection)
 	{
+		if(document.languageId !== LanguageId)
+			return;
+		
 		const program = this.getParsedLpcProgram(document);
 
 		const diagnostics = program.syntaxErrors.map(({ line, column, msg }) =>
@@ -727,9 +733,9 @@ class LPCLanguageProvider
 	/**
 	 * Registeres all the language providers supported
 	 */
-	register(context, lpcSyntaxDiagnostics)
+	register(context, config)
 	{
-		const documentSelector = { language: "lpc" };
+		const documentSelector = { language: LanguageId };
 		languages.registerDocumentSymbolProvider(documentSelector, this);
 		languages.registerDocumentHighlightProvider(documentSelector, this);
 		languages.registerRenameProvider(documentSelector, this);
@@ -738,19 +744,22 @@ class LPCLanguageProvider
 		languages.registerReferenceProvider(documentSelector, this);
 
 		// Subscript to document changes so things can be reloaded
-		this.subscribeToDocumentChanges(context, lpcSyntaxDiagnostics);
+		const { lpcSyntaxDiagnostics } = config;
 
-		workspace
-			.onDidOpenTextDocument((document) =>
-			{
-				// For all documents that end with .c or .h to be LPC documents
-				if (document.languageId === 'lpc')
-					return;
+		if (lpcSyntaxDiagnostics)
+			this.subscribeToDocumentChanges(context, lpcSyntaxDiagnostics);
 
-				if (document.uri.path.endsWith('.c')
-					|| document.uri.path.endsWith('.h'))
-					languages.setTextDocumentLanguage(document, 'lpc');
-			});
+		// Mark any .c files as lpc files.
+		workspace.onDidOpenTextDocument((document) =>
+		{
+			const { uri } = document;
+			if (uri.scheme !== 'lpc-remote-ed')
+				return;
+
+			const ext = extname(uri.path);
+			if (ext === ".c")
+				languages.setTextDocumentLanguage(document, LanguageId);
+		});
 	}
 }
 
