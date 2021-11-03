@@ -764,5 +764,6 @@ class LPCLanguageProvider
 }
 
 module.exports = {
+	LanguageId,
 	LPCLanguageProvider
 };

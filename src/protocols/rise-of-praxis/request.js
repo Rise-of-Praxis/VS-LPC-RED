@@ -7,6 +7,8 @@ const loginResponsePattern = /^Connection to (.+)./i;
 const serverResponsePattern = /^(\d{3}) (.+?)\n(.*)$/si;
 const messageContentPattern = /^\((\d+)\) (.*)$/si;
 
+let instanceId = 0;
+
 /**
  * @typedef {object} RemoteEditorResponse
  * @property {string} mudName The name of the mud the client is connected to
@@ -16,12 +18,12 @@ const messageContentPattern = /^\((\d+)\) (.*)$/si;
  * @property {string} [content] If the server sent content
  */
 
-
 class RemoteEditorRequest extends EventEmitter
 {
 	constructor(options)
 	{
 		super();
+		this.#instanceId = instanceId++;
 		const { uri, userName, password } = options;
 		this.#connectionOptions = {
 			host: uri.hostname,
@@ -32,6 +34,13 @@ class RemoteEditorRequest extends EventEmitter
 
 		this.#outputChannel = options.outputChannel;
 	}
+
+	/** 
+	 * Unique Id of this request instance 
+	 * @returns {number}
+	 */
+	get instanceId() { return this.#instanceId; }
+	#instanceId;
 
 	/**
 	 * The options used to establish a connection
@@ -94,8 +103,16 @@ class RemoteEditorRequest extends EventEmitter
 		if (messageContent)
 		{
 			const contentMatches = messageContentPattern.exec(messageContent);
-			response.size = parseInt(contentMatches[1]);
-			response.content = contentMatches[2] || "";
+			if (contentMatches)
+			{
+				response.size = parseInt(contentMatches[1]);
+				response.content = contentMatches[2] || "";
+			}
+			else
+			{
+				response.content = messageContent;
+				response.size = messageContent.length;
+			}
 
 			if (response.size > 0
 				&& response.size !== response.content.length)
@@ -111,8 +128,11 @@ class RemoteEditorRequest extends EventEmitter
 	 */
 	#log(message)
 	{
+		const logMessage = `[Instance ${this.instanceId}] ${message}`;
 		if (this.#outputChannel)
-			this.#outputChannel.appendLine(message);
+			this.#outputChannel.appendLine(logMessage);
+
+		console.log(logMessage);
 	}
 
 	/**
@@ -124,10 +144,11 @@ class RemoteEditorRequest extends EventEmitter
 	{
 		const { userName, password } = this.#connectionOptions;
 
-		if(!userName || !password)
+		if (!userName || !password)
 			return false;
 
-		try {
+		try
+		{
 			const response = await this.#write(`login ${userName} ${password}\n`);
 
 			if (response.statusCode === "100")
@@ -142,7 +163,8 @@ class RemoteEditorRequest extends EventEmitter
 
 			return false;
 		}
-		catch(error) {
+		catch (error)
+		{
 			this.#log(`Handshake failed: ${error}`);
 			return false;
 		}
@@ -162,35 +184,37 @@ class RemoteEditorRequest extends EventEmitter
 			let buffer = '';
 			const connection = this.#connection;
 
+			const handleError = (error) => 
+			{
+				connection.removeAllListeners();
+				return reject(error);
+			}
+
 			// Callback function that handles the server response
 			const handleServerResponse = (responseData) =>
 			{
 				buffer += responseData.toString();
 				if (!serverResponsePattern.test(buffer))
-					reject("Server sent invalid response");
+					return handleError(`Server sent invalid response: ${buffer}`);
 
 				// Process the completed buffer
 				const response = this.processResponse(buffer);
 
-				// If the data returned is not valid, wait because there may be more data that is being streamed
-				// back
+				// If the data returned is not valid, wait because there may be more data that 
+				// is being streamed back
 				if (response === undefined)
 					return;
 
-				connection.off('data', handleServerResponse);
-
-				// Stop listening on this connection
+				// Stop responding to messages until the next request
+				connection.removeAllListeners();
 				resolve(response);
 			}
 
 			connection.on('data', handleServerResponse);
-			connection.on('error', (error) =>
-			{
-				reject(error);
-			});
+			connection.on('error', handleError);
 			connection.on('timeout', () =>
 			{
-				reject("Remote Editor response timed out");
+				handleError("Remote Editor response timed out")
 			});
 			connection.write(data);
 		});
@@ -210,12 +234,8 @@ class RemoteEditorRequest extends EventEmitter
 		{
 			const connection = new Socket();
 			this.#connection = connection;
-			connection.on('error', (error) =>
-			{
-				reject(error);
-			});
 
-			connection.on('connect', async () =>
+			connection.once('connect', async () =>
 			{
 				// Authenticate this connection
 				if (!await this.#handshake())
@@ -228,10 +248,13 @@ class RemoteEditorRequest extends EventEmitter
 				{
 					// Write the data to the socket and wait for a response
 					const response = await this.#write(data);
-					this.#log(`${data} -> Response: ${response.statusCode} ${response.status}`);
-
-					if (typeof (response.content) === "string")
-						this.#log(` -> Content is ${response.size} bytes long`);
+					if (/get/i.test(data))
+					{
+						let logMessage = `${data}\tResponse: ${response.statusCode} ${response.status}\n`;
+						if (typeof (response.content) === "string")
+							logMessage += `\t-> Content is ${response.size} bytes long\n`;
+							this.#log(logMessage);
+					}
 
 					if (typeof (callback) === "function")
 						await callback(response, connection);
@@ -250,7 +273,7 @@ class RemoteEditorRequest extends EventEmitter
 			});
 
 			const { host, port } = this.#connectionOptions;
-			connection.connect({ host, port })
+			connection.connect({ host, port });
 		});
 	}
 }

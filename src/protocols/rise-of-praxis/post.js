@@ -3,40 +3,76 @@ const { FileSystemError } = require('vscode');
 const { rejects } = require('assert');
 
 
+/**
+ * 
+ * @param {object} connectionOptions 
+ * @param {string} path 
+ * @param {Buffer} content 
+ * @param {*} options 
+ * @returns 
+ */
 module.exports = async (connectionOptions, path, content, options) =>
 {
 	const size = content ? content.length : 0;
 	const request = new RemoteEditorRequest(connectionOptions);
 
-	const chunkSize = 1024;
-
-	const uploadFile = (startResponse, connection) =>
+	/**
+	 * 
+	 * @param {import('./request').RemoteEditorResponse} startResponse 
+	 * @param {Socket} connection 
+	 * @returns 
+	 */
+	const handlePostResponse = (startResponse, connection) =>
 	{
 		return new Promise((resolve, reject) =>
 		{
-			if (startResponse.statusCode !== "200"
-				|| size === 0)
+			// If the initial start response is not 200, reject this.
+			if (startResponse.statusCode !== "200")
+				return reject(startResponse.content);
+
+			// If there was no content to upload, we're done.
+			if (size === 0)
 				resolve();
 
-			const uploadResponse = (buffer) =>
+			let responseBuffer = "";
+			const handleUploadResponse = (buffer) =>
 			{
-				const data = buffer.toString();
-				if(data.startsWith("1"))
-					return;
+				responseBuffer += buffer.toString();
 
-				if(data.startsWith("2"))
+				// Parse the response that's been put together so far
+				let uploadResponse;
+				while (uploadResponse = request.processResponse(responseBuffer))
 				{
-					connection.off('data', uploadResponse);
-					resolve();
-					return;
-				}
+					// There are possible multiple responses in the buffer, so the response content are the 
+					// other responses.
+					responseBuffer = uploadResponse.content || '';
 
-				reject(data.substr(4));
+					// If the response code is 1xx, then there's more coming
+					if (uploadResponse.statusCode.startsWith("1"))
+						continue;
+
+					// If the response code is 2xx, the upload is done
+					if (uploadResponse.statusCode.startsWith("2"))
+					{
+						connection.off('data', handleUploadResponse);
+						return resolve();
+					}
+
+					// If it got this far, then there's something wrong.
+					reject(uploadResponse.status);
+				}
 			};
 
-			connection.on('data', uploadResponse);
+			// Handle responses from the server
+			connection.on('data', handleUploadResponse);
+			connection.on('error', (err) =>
+			{
+				reject(err);
+			})
 
+			// Send the data to the server, in chunks
 			let remainingData = content.toString();
+			const chunkSize = 2014;
 			while (remainingData.length > 0)
 			{
 				const chunk = remainingData.substr(0, chunkSize);
@@ -47,7 +83,7 @@ module.exports = async (connectionOptions, path, content, options) =>
 		});
 	};
 
-	const response = await request.send(`post ${path} ${size}\n`, uploadFile);
+	const response = await request.send(`post ${path} ${size}\n`, handlePostResponse);
 
 	if (response.statusCode !== "200")
 		throw new FileSystemError(response.status);

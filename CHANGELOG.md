@@ -2,6 +2,13 @@
 
 All notable changes to the "lpc-remote-editor" extension will be documented in this file.
 
+## [0.2.1]
+
+### Fixed
+
+- Fixed bug due to multiple responses from the server not being handled by the client
+
+
 ## [0.2.0]
 
 ### Added

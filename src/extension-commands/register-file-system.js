@@ -3,6 +3,30 @@ const { FileSystem } = require("../file-system");
 const { existsSync, mkdirSync } = require('fs');
 const { dirname } = require('path');
 const { getConfiguration } = require('../utilities/configuration');
+const { LanguageId } = require("../lpc-lang");
+
+function getLocalWorkspacePath()
+{
+	// If the user has local backup specified, make a copy of the file.
+	const config = getConfiguration();
+	const localWorkspace = config.get("localWorkspace");
+	if (!localWorkspace)
+		return;
+
+	try
+	{
+		// Ensure the directory exists
+		if (!existsSync(localWorkspace))
+			mkdirSync(localWorkspace, { recursive: true });
+	}
+	catch (err)
+	{
+		window.showErrorMessage(`Unable to use directory ${localWorkspace} to save local files: ${err}`);
+		return;
+	}
+
+	return localWorkspace;
+}
 
 /**
  * Turns on auto-save
@@ -10,27 +34,17 @@ const { getConfiguration } = require('../utilities/configuration');
  */
 function enableAutoSave()
 {
-	// If the user has local backup specified, make a copy of the file.
-	const config = getConfiguration();
-	const localWorkspace = config.get("localWorkspace");
-	if (localWorkspace)
-	{
-		try
-		{
-			// Ensure the directory exists
-			if (!existsSync(localWorkspace))
-				mkdirSync(localWorkspace, { recursive: true });
-		}
-		catch (err)
-		{
-			window.showErrorMessage(`Unable to use directory ${localWorkspace} to save local files: ${err}`);
-			return;
-		}
-	}
-
-	const baseUri = Uri.file(localWorkspace);
 	workspace.onDidSaveTextDocument((document) =>
 	{
+		if (document.languageId !== LanguageId)
+			return;
+
+		const localWorkspace = getLocalWorkspacePath()
+		if (!localWorkspace)
+			return;
+
+		// Get the local workspace
+		const baseUri = Uri.file(localWorkspace);
 		const { uri } = document;
 		const targetPath = Uri.joinPath(baseUri, uri.path);
 
