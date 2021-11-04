@@ -1,5 +1,5 @@
 const { workspace, window, ExtensionContext, ConfigurationTarget, commands, Uri } = require('vscode');
-const createRemoteEditorClient = require('../client');
+const { createRemoteEditorClient } = require('../clients');
 const { URL } = require('url');
 
 const connectToMudCancelled = 'Connect to a MUD - cancelled';
@@ -164,7 +164,7 @@ module.exports = async (context) =>
 
 	try
 	{
-		const client = createRemoteEditorClient(connectionOptions);
+		const client = await createRemoteEditorClient(connectionOptions);
 
 		const result = await client.who();
 		if (!result)
