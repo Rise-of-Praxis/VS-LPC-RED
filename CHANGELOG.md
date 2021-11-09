@@ -2,6 +2,12 @@
 
 All notable changes to the "lpc-remote-editor" extension will be documented in this file.
 
+## [0.2.3]
+
+### Fixed
+
+- Fixed connectivity issues and re-establishing connection issues.
+
 ## [0.2.2]
 
 ### Fixed
