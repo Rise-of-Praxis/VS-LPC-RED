@@ -32,7 +32,7 @@ function activate(context)
 		const commandHandler = extensionCommands[name];
 		const fullCommandName = `${extensionId.id}.${name}`;
 		console.log(`Registering Extension Command '${fullCommandName}'`)
-		const command = commands.registerCommand(fullCommandName, () => commandHandler(context));
+		const command = commands.registerCommand(fullCommandName, (...args) => commandHandler(context, ...args));
 		context.subscriptions.push(command);
 	});
 
