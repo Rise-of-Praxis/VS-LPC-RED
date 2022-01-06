@@ -11,6 +11,7 @@ All notable changes to the "lpc-remote-editor" extension will be documented in t
 ### Updated
 
 - LPC Grammar so that `efun::` is properly recognized
+- LPC Grammar to support class initializers
 
 ### Fixed
 
