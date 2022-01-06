@@ -1,6 +1,6 @@
 const { commands, languages, workspace, Disposable, window } = require("vscode");
 const extensionCommands = require('./extension-commands');
-const { LPCLanguageProvider, subscribeToDocumentChanges } = require("./lpc-lang");
+const { LPCLanguageProvider } = require("./lpc");
 const { getConfiguration } = require("./utilities/configuration");
 
 const extensionIdPattern = /^([^.]+)\.(.+)$/i;

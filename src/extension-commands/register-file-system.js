@@ -1,10 +1,10 @@
 const vscode = require('vscode');
-const { workspace, window, ExtensionContext, Uri, commands, StatusBarAlignment } = require('vscode');
+const { workspace, window, Uri, commands, StatusBarAlignment } = require('vscode');
 const { FileSystem } = require("../file-system");
 const { existsSync, mkdirSync } = require('fs');
 const { dirname } = require('path');
 const { getConfiguration } = require('../utilities/configuration');
-const { LanguageId } = require("../lpc-lang");
+const { LanguageId } = require("../lpc");
 const { createRemoteEditorClient } = require('../clients');
 const { ConnectError, RequestCancelledError } = require('../clients/ClientErrors');
 const clients = require('../clients');
@@ -69,7 +69,7 @@ let client = null;
 
 /**
  * 
- * @param {import("vscode").ExtensionContext} context 
+ * @param {object} context 
  */
 module.exports = async (context) =>
 {
@@ -105,7 +105,6 @@ module.exports = async (context) =>
 		 */
 		async function attemptReconnect()
 		{
-
 			reconnectAttempts++;
 
 			if (reconnectAttempts > 3)
