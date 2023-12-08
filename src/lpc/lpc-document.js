@@ -9,10 +9,11 @@ const { Uri, Range, Position, DocumentSymbol, SymbolKind } = require("vscode");
  */
 const documentSymbolRules =
 	[
+		LPCParser.RULE_parameterDefinition,
 		LPCParser.RULE_defineConstantStatement,
-		LPCParser.RULE_variable,
 		LPCParser.RULE_programVariableDeclaration,
 		LPCParser.RULE_functionDefinition,
+		LPCParser.RULE_functionDeclaration,
 		LPCParser.RULE_classIdentifier
 	];
 
@@ -22,9 +23,12 @@ const documentSymbolRules =
 const documentSymbolMapping =
 {
 	[LPCParser.RULE_defineConstantStatement]: SymbolKind.Constant,
+	[LPCParser.RULE_parameterDefinition]: SymbolKind.Variable,
 	[LPCParser.RULE_variable]: SymbolKind.Variable,
 	[LPCParser.RULE_programVariableDeclaration]: SymbolKind.Field,
+	[LPCParser.RULE_programDeclaration]: SymbolKind.Variable,
 	[LPCParser.RULE_functionDefinition]: SymbolKind.Function,
+	[LPCParser.RULE_functionDeclaration]: SymbolKind.Function,
 	[LPCParser.RULE_classIdentifier]: SymbolKind.Struct
 }
 
@@ -45,7 +49,7 @@ const documentSymbolMapping =
 /**
  * @typedef {Object} SymbolTableEntry
  * @property {Range[]} occurrences The ranges where a symbol occurs 
- * @property {Range} definitionRange The range where the symbol is defined. 
+ * @property {DocumentSymbol} symbol The instance of {@type DocumentSymbol}
  */
 
 /**
@@ -73,7 +77,7 @@ class LPCDocument extends LPCListener
 		const walker = new tree.ParseTreeWalker()
 		walker.walk(this, lpcProgram);
 
-		this.#scope = [];
+		this.#scopes = [];
 	}
 
 	/**
@@ -108,13 +112,25 @@ class LPCDocument extends LPCListener
 	 * A stack of contexts that represent the scope block while visiting the parse tree
 	 * @type {Scope[]}
 	 */
-	#scope = [];
+	#scopes = [];
+
+	/**
+	 * The function that is currently being parsed
+	 * @type {DocumentSymbol}
+	 */
+	#currentFunctionSymbol = undefined;
+
+	/**
+	 * The scope representing the file's top-level symbols
+	 * @type {Scope}
+	 */
+	#rootScope = undefined;
 
 	/**
 	 * The current scope being processed
 	 * @type {Scope}
 	 */
-	get currentScope() { return this.#scope[0]; }
+	get currentScope() { return this.#scopes[0]; }
 
 	/**
 	 * Any captured syntax errors
@@ -167,6 +183,10 @@ class LPCDocument extends LPCListener
 			return undefined;
 
 		const identifier = context.identifier();
+
+		if (identifier == undefined)
+			return undefined;
+
 		return identifier.getText();
 	}
 
@@ -278,12 +298,14 @@ class LPCDocument extends LPCListener
 	 */
 	addToSymbolTable(symbol)
 	{
-		const scope = this.currentScope;
-		scope.symbolTable.set(symbol.name, { occurrences: [], definitionRange: symbol.range });
+		const { symbolTable } = this.currentScope;
+		symbolTable.set(symbol.name, { symbol, occurrences: [] });
 	}
 
 	/**
 	 * Adds a document symbol
+	 * @param {ParserRuleContext} ctx The parser rule context
+	 * @returns {DocumentSymbol} The document symbol that was added.
 	 */
 	addDocumentSymbol(ctx)
 	{
@@ -297,26 +319,27 @@ class LPCDocument extends LPCListener
 		if (statement == null)
 			return;
 
-		const kind = this.getDocumentSymbolKind(statement);
-		if (kind == null)
+		const statementKind = this.getDocumentSymbolKind(statement);
+		let symbolKind = this.getDocumentSymbolKind(ctx) || statementKind;
+		if (symbolKind == null)
 			return;
 
-		const symbol = this.createSymbol(ctx, kind);
+		if (symbolKind === SymbolKind.Variable
+			&& statementKind === SymbolKind.Field)
+			symbolKind = statementKind;
 
-		// If this is a top-level declaration, then add it to the top set of document symbols
-		if (ctx.ruleIndex === LPCParser.RULE_functionDeclaration
-			|| ctx.ruleIndex === LPCParser.RULE_classIdentifier
-			|| this.#scope.length === 1)
-			this.#documentSymbols.push(symbol);
-		else
-		{
-			// Add this to the function scope that it's defined in
-			const scope = this.#documentSymbols[this.#documentSymbols.length - 1];
-			scope.children.push(symbol);
-		}
+		// Create the symbol for this
+		const symbol = this.createSymbol(ctx, symbolKind);
+		if (!symbol)
+			return;
 
 		// Add this symbol to the symbol table for the current scope
 		this.addToSymbolTable(symbol);
+		if (this.#currentFunctionSymbol
+			&& symbol.kind !== SymbolKind.Function)
+			this.#currentFunctionSymbol.children.push(symbol);
+
+		return symbol;
 	}
 
 	/**
@@ -348,8 +371,8 @@ class LPCDocument extends LPCListener
 	 */
 	getIdentifierDeclarationScope(identifier)
 	{
-		const name = (typeof(identifier) === "string") ? identifier : identifier.name;
-		let scope = (typeof(identifier) === "string") ? this.currentScope : identifier.scope;
+		const name = (typeof (identifier) === "string") ? identifier : identifier.name;
+		let scope = (typeof (identifier) === "string") ? this.currentScope : identifier.scope;
 
 		while (scope !== undefined)
 		{
@@ -378,27 +401,60 @@ class LPCDocument extends LPCListener
 		entry.occurrences.push(range);
 	}
 
+	/**
+	 * Pushes a scope onto the stack of scopes being processed
+	 * @returns {Scope} The scope that was added
+	 */
 	pushScope(ctx)
 	{
 		/** @type {Scope} */
 		const scope = { context: ctx, symbolTable: new Map(), parent: this.currentScope };
 
-		this.#scope.unshift(scope);
+		this.#scopes.unshift(scope);
+
+		return scope;
 	}
 
+	/**
+	 * pops a scope from the stack of scopes being processed
+	 * @returns {Scope} The scope that was removed
+	 */
 	popScope()
 	{
-		this.#scope.shift();
+		return this.#scopes.shift();
 	}
 
 	enterLpcProgram(ctx)
 	{
-		this.pushScope(ctx);
+		this.#rootScope = this.pushScope(ctx);
 	}
 
 	exitLpcProgram(ctx)
 	{
 		this.popScope();
+
+		// Set the document symbols to root scope's symbol table
+		/** @type {DocumentSymbol[]} */
+		const documentSymbols = [];
+
+		this.#rootScope.symbolTable.forEach((entry) => documentSymbols.push(entry.symbol));
+
+		// Sort the array based on the names
+		const sorted = documentSymbols.sort((a, b) =>
+		{
+			if (a.kind === b.kind)
+				return a.name.localeCompare(b.name)
+
+			// Sorting based on type should always put functions at the end
+			if (a.kind === SymbolKind.Function)
+				return 1;
+			else if (b.kind === SymbolKind.Function)
+				return -1;
+
+			return (a.kind > b.kind ? 1 : -1);
+		});
+
+		this.#documentSymbols = sorted;
 	}
 
 	enterParameterDefinition(ctx)
@@ -408,7 +464,8 @@ class LPCDocument extends LPCListener
 
 	enterFunctionDeclaration(ctx)
 	{
-		this.addDocumentSymbol(ctx);
+		const symbol = this.addDocumentSymbol(ctx);
+		this.#currentFunctionSymbol = symbol;
 	}
 
 	enterFunctionDefinition(ctx)
@@ -418,7 +475,23 @@ class LPCDocument extends LPCListener
 
 	exitFunctionDefinition(ctx)
 	{
+
 		this.popScope();
+
+		// Check to see if we need to replace a previous function declaration 
+		// with this definition
+		const currentFunction = this.#currentFunctionSymbol;
+		const { name } = currentFunction;
+		const scope = this.#rootScope;
+		const { symbolTable } = scope;
+
+		if (symbolTable.has(name))
+		{
+			const declaration = symbolTable.get(name);
+			declaration.symbol = currentFunction;
+		}
+
+		this.#currentFunctionSymbol = undefined;
 	}
 
 	enterClassIdentifier(ctx)

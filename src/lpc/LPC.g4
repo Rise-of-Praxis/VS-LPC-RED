@@ -471,7 +471,7 @@
 		;
 
 	parameterDefinition
-		:   dataType array? identifier
+		:   dataType array? identifier?
 		;
 
 	spreadParameterDefinition
