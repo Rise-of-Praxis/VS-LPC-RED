@@ -13,6 +13,8 @@ class RemoteEditorClient extends EventEmitter
 		this.#outputChannel = options.outputChannel;
 	}
 
+	pathSeparator = "/";
+
 	/**
 	 * If defined, the channel used to output messages to
 	 * 
@@ -52,7 +54,51 @@ class RemoteEditorClient extends EventEmitter
 	 * @param {string} path The path to access
 	 * @returns {Uri}
 	 */
-	getFileUri(path) { return Uri.parse(`${this.scheme}:${path}`); }
+	getFileUri(path, baseUri)
+	{
+		if (baseUri)
+			path = this.resolvePath(path, baseUri.path);
+
+		return Uri.from({ scheme: this.scheme, path });
+	}
+
+	/**
+	 * Resolves a path relative to another path
+	 * @param {string} path The path to resolve
+	 * @param {string} basePath The base path to resolve relative to
+	 * @returns {string}
+	 */
+	resolvePath(path, basePath)
+	{
+		const parts = [];
+
+		// basePath is only used if the path is not absolute (ie: starts with the path separator)
+		if (!path.startsWith(this.pathSeparator))
+		{
+			parts.push(...basePath.split(this.pathSeparator));
+
+			// If `path` does not end with the path separator, remove the last entry
+			if (!basePath.endsWith(this.pathSeparator))
+				parts.pop();
+		}
+
+		parts.push(...path.split(this.pathSeparator));
+
+		// Resolve and self and parent path directives
+		const resolvedParts = [];
+		for (const part of parts)
+		{
+			if (part === ".")
+				continue;
+
+			if (part === "..")
+				resolvedParts.pop();
+
+			resolvedParts.push(part);
+		}
+
+		return resolvedParts.join(this.pathSeparator);
+	}
 
 	/**
 	 * Reads the content of a directory
@@ -91,6 +137,28 @@ class RemoteEditorClient extends EventEmitter
 	 * @returns {Promise<Buffer>} The file content
 	 */
 	async readFile(path) { throw new Error("Not implemented"); }
+
+	/**
+	 * Simple check to see if a path exists.
+	 * Note: The default implementation works on capturing FileNotFound errors from {@see getFileInfo}.  
+	 * A more optimal approach should be implemented in the specific clients.
+	 * 
+	 * @param {string} path The path to check
+	 * @returns {Promise<boolean>}
+	 */
+	async pathExists(path)
+	{
+		try
+		{
+			const info = this.getFileInfo(path);
+		}
+		catch (err)
+		{
+			return false;
+		}
+		
+		return true;
+	}
 
 	/**
 	 * Writes a file
