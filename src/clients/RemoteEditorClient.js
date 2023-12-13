@@ -3,10 +3,19 @@ const { Socket } = require("net");
 const { Uri } = require("vscode");
 
 /**
+ * @typedef {object} RemoteEditorClientOptions
+ * @property {import("vscode").OutputChannel} outputChannel The channel to output connection messages to
+ */
+
+
+/**
  * Interface of all Remote Editor clients
  */
 class RemoteEditorClient extends EventEmitter
 {
+    /**
+     * @param {RemoteEditorClientOptions} options
+     */
 	constructor(options)
 	{
 		super();
@@ -201,6 +210,17 @@ class RemoteEditorClient extends EventEmitter
 	 * @async
 	 */
 	async copy(oldPath, newPath, options) { throw new Error("Not implemented"); }
+
+	/**
+	 * Renames a file or directory from one location to another location
+	 * 
+	 * @param {string} oldPath The path of the source file/directory
+	 * @param {string} newPath The path of the target file/directory
+	 * @param {object} options Options used for copying the file/directory
+	 * @returns {Promise}
+	 * @async
+	 */
+	async rename(oldPath, newPath, options) { throw new Error("Not implemented"); }
 
 	isReady() { return true; }
 
