@@ -172,7 +172,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
         const timeoutHandle = setTimeout(() =>
         {
             this.emit('timeout');
-            handleError(new TimeoutError(`Request failed to complete with alotted time (${requestTimeout / 1000}s).`));
+            handleError(new TimeoutError(`Request failed to complete with alotted time (${requestTimeout / 1000}s)\n${message}.`));
         }, requestTimeout);
 
         // Called when the request completed, regardless of failure or success

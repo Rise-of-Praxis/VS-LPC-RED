@@ -2,11 +2,13 @@
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
 var LPCListener = require('./LPCListener').LPCListener;
+var LPCVisitor = require('./LPCVisitor').LPCVisitor;
+
 var grammarFileName = "LPC.g4";
 
 
 var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
-    "\u0003f\u03c2\u0004\u0002\t\u0002\u0004\u0003\t\u0003\u0004\u0004\t",
+    "\u0003g\u03c2\u0004\u0002\t\u0002\u0004\u0003\t\u0003\u0004\u0004\t",
     "\u0004\u0004\u0005\t\u0005\u0004\u0006\t\u0006\u0004\u0007\t\u0007\u0004",
     "\b\t\b\u0004\t\t\t\u0004\n\t\n\u0004\u000b\t\u000b\u0004\f\t\f\u0004",
     "\r\t\r\u0004\u000e\t\u000e\u0004\u000f\t\u000f\u0004\u0010\t\u0010\u0004",
@@ -127,7 +129,7 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "Y\u0003\u0002HH\u0003\u0002\u0004\u0006\u0004\u0002\u0003\u0003\u0007",
     "\b\u0004\u0002$$UU\u0005\u00024479GH\u0003\u000223\u0004\u0002**DE\u0005",
     "\u000256@CUU\u0003\u0002&\'\u0004\u0002,->>\u0003\u0002./\u0004\u0002",
-    "()++\u0003\u0002ad\u0002\u0400\u0002\u00d1\u0003\u0002\u0002\u0002\u0004",
+    "()++\u0003\u0002be\u0002\u0400\u0002\u00d1\u0003\u0002\u0002\u0002\u0004",
     "\u00d6\u0003\u0002\u0002\u0002\u0006\u00da\u0003\u0002\u0002\u0002\b",
     "\u00e6\u0003\u0002\u0002\u0002\n\u00ef\u0003\u0002\u0002\u0002\f\u00f1",
     "\u0003\u0002\u0002\u0002\u000e\u00fc\u0003\u0002\u0002\u0002\u0010\u0102",
@@ -194,21 +196,21 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\u0002\u00e6\u00e3\u0003\u0002\u0002\u0002\u00e6\u00e4\u0003\u0002\u0002",
     "\u0002\u00e6\u00e5\u0003\u0002\u0002\u0002\u00e7\t\u0003\u0002\u0002",
     "\u0002\u00e8\u00f0\u0005\u0010\t\u0002\u00e9\u00f0\u0005\f\u0007\u0002",
-    "\u00ea\u00f0\u0007]\u0002\u0002\u00eb\u00f0\u0007\\\u0002\u0002\u00ec",
-    "\u00f0\u0007^\u0002\u0002\u00ed\u00f0\u0007_\u0002\u0002\u00ee\u00f0",
-    "\u0007`\u0002\u0002\u00ef\u00e8\u0003\u0002\u0002\u0002\u00ef\u00e9",
+    "\u00ea\u00f0\u0007^\u0002\u0002\u00eb\u00f0\u0007]\u0002\u0002\u00ec",
+    "\u00f0\u0007_\u0002\u0002\u00ed\u00f0\u0007`\u0002\u0002\u00ee\u00f0",
+    "\u0007a\u0002\u0002\u00ef\u00e8\u0003\u0002\u0002\u0002\u00ef\u00e9",
     "\u0003\u0002\u0002\u0002\u00ef\u00ea\u0003\u0002\u0002\u0002\u00ef\u00eb",
     "\u0003\u0002\u0002\u0002\u00ef\u00ec\u0003\u0002\u0002\u0002\u00ef\u00ed",
     "\u0003\u0002\u0002\u0002\u00ef\u00ee\u0003\u0002\u0002\u0002\u00f0\u000b",
-    "\u0003\u0002\u0002\u0002\u00f1\u00f2\u0007[\u0002\u0002\u00f2\u00f3",
+    "\u0003\u0002\u0002\u0002\u00f1\u00f2\u0007\\\u0002\u0002\u00f2\u00f3",
     "\u0005\u000e\b\u0002\u00f3\r\u0003\u0002\u0002\u0002\u00f4\u00f6\u0007",
     "G\u0002\u0002\u00f5\u00f7\n\u0003\u0002\u0002\u00f6\u00f5\u0003\u0002",
     "\u0002\u0002\u00f7\u00f8\u0003\u0002\u0002\u0002\u00f8\u00f9\u0003\u0002",
     "\u0002\u0002\u00f8\u00f6\u0003\u0002\u0002\u0002\u00f9\u00fa\u0003\u0002",
-    "\u0002\u0002\u00fa\u00fd\u0007H\u0002\u0002\u00fb\u00fd\u0007c\u0002",
+    "\u0002\u0002\u00fa\u00fd\u0007H\u0002\u0002\u00fb\u00fd\u0007d\u0002",
     "\u0002\u00fc\u00f4\u0003\u0002\u0002\u0002\u00fc\u00fb\u0003\u0002\u0002",
-    "\u0002\u00fd\u000f\u0003\u0002\u0002\u0002\u00fe\u00ff\u0007Z\u0002",
-    "\u0002\u00ff\u0103\u0005\u0012\n\u0002\u0100\u0101\u0007Z\u0002\u0002",
+    "\u0002\u00fd\u000f\u0003\u0002\u0002\u0002\u00fe\u00ff\u0007[\u0002",
+    "\u0002\u00ff\u0103\u0005\u0012\n\u0002\u0100\u0101\u0007[\u0002\u0002",
     "\u0101\u0103\u0005\u0014\u000b\u0002\u0102\u00fe\u0003\u0002\u0002\u0002",
     "\u0102\u0100\u0003\u0002\u0002\u0002\u0103\u0011\u0003\u0002\u0002\u0002",
     "\u0104\u0106\u0005\u00c0a\u0002\u0105\u0107\u0005V,\u0002\u0106\u0105",
@@ -314,7 +316,7 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "M\u0003\u0002\u0002\u0002\u01b8\u01b9\u0007S\u0002\u0002\u01b9\u01ba",
     "\u0007I\u0002\u0002\u01baO\u0003\u0002\u0002\u0002\u01bb\u01bc\u0007",
     "I\u0002\u0002\u01bc\u01bd\u0007T\u0002\u0002\u01bdQ\u0003\u0002\u0002",
-    "\u0002\u01be\u01bf\u0007V\u0002\u0002\u01bf\u01c6\u0007a\u0002\u0002",
+    "\u0002\u01be\u01bf\u0007V\u0002\u0002\u01bf\u01c6\u0007b\u0002\u0002",
     "\u01c0\u01c1\u0007V\u0002\u0002\u01c1\u01c2\u0007S\u0002\u0002\u01c2",
     "\u01c3\u0005V,\u0002\u01c3\u01c4\u0007T\u0002\u0002\u01c4\u01c6\u0003",
     "\u0002\u0002\u0002\u01c5\u01be\u0003\u0002\u0002\u0002\u01c5\u01c0\u0003",
@@ -362,14 +364,14 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\u0002\u0002\u0205W\u0003\u0002\u0002\u0002\u0206\u0204\u0003\u0002",
     "\u0002\u0002\u0207\u0208\u0007L\u0002\u0002\u0208\u0209\u0005V,\u0002",
     "\u0209\u020a\u0007I\u0002\u0002\u020a\u020b\u0005V,\u0002\u020bY\u0003",
-    "\u0002\u0002\u0002\u020c\u020e\u0007c\u0002\u0002\u020d\u020c\u0003",
+    "\u0002\u0002\u0002\u020c\u020e\u0007d\u0002\u0002\u020d\u020c\u0003",
     "\u0002\u0002\u0002\u020e\u020f\u0003\u0002\u0002\u0002\u020f\u020d\u0003",
     "\u0002\u0002\u0002\u020f\u0210\u0003\u0002\u0002\u0002\u0210\u0214\u0003",
     "\u0002\u0002\u0002\u0211\u0213\u0005Z.\u0002\u0212\u0211\u0003\u0002",
     "\u0002\u0002\u0213\u0216\u0003\u0002\u0002\u0002\u0214\u0212\u0003\u0002",
     "\u0002\u0002\u0214\u0215\u0003\u0002\u0002\u0002\u0215\u0220\u0003\u0002",
     "\u0002\u0002\u0216\u0214\u0003\u0002\u0002\u0002\u0217\u0218\u0005\u00c0",
-    "a\u0002\u0218\u021c\u0007c\u0002\u0002\u0219\u021b\u0005Z.\u0002\u021a",
+    "a\u0002\u0218\u021c\u0007d\u0002\u0002\u0219\u021b\u0005Z.\u0002\u021a",
     "\u0219\u0003\u0002\u0002\u0002\u021b\u021e\u0003\u0002\u0002\u0002\u021c",
     "\u021a\u0003\u0002\u0002\u0002\u021c\u021d\u0003\u0002\u0002\u0002\u021d",
     "\u0220\u0003\u0002\u0002\u0002\u021e\u021c\u0003\u0002\u0002\u0002\u021f",
@@ -553,14 +555,14 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\u0002\u0002\u0355\u0356\u0007\u0019\u0002\u0002\u0356\u0357\u0005\u00c0",
     "a\u0002\u0357\u0358\u0007J\u0002\u0002\u0358\u035a\u0003\u0002\u0002",
     "\u0002\u0359\u034c\u0003\u0002\u0002\u0002\u0359\u0353\u0003\u0002\u0002",
-    "\u0002\u035a\u00b9\u0003\u0002\u0002\u0002\u035b\u035d\u0007c\u0002",
+    "\u0002\u035a\u00b9\u0003\u0002\u0002\u0002\u035b\u035d\u0007d\u0002",
     "\u0002\u035c\u035e\u0007@\u0002\u0002\u035d\u035c\u0003\u0002\u0002",
     "\u0002\u035d\u035e\u0003\u0002\u0002\u0002\u035e\u035f\u0003\u0002\u0002",
     "\u0002\u035f\u0368\u0005V,\u0002\u0360\u0362\u0005V,\u0002\u0361\u0363",
     "\u0007@\u0002\u0002\u0362\u0361\u0003\u0002\u0002\u0002\u0362\u0363",
     "\u0003\u0002\u0002\u0002\u0363\u0364\u0003\u0002\u0002\u0002\u0364\u0365",
-    "\u0007c\u0002\u0002\u0365\u0368\u0003\u0002\u0002\u0002\u0366\u0368",
-    "\u0007c\u0002\u0002\u0367\u035b\u0003\u0002\u0002\u0002\u0367\u0360",
+    "\u0007d\u0002\u0002\u0365\u0368\u0003\u0002\u0002\u0002\u0366\u0368",
+    "\u0007d\u0002\u0002\u0367\u035b\u0003\u0002\u0002\u0002\u0367\u0360",
     "\u0003\u0002\u0002\u0002\u0367\u0366\u0003\u0002\u0002\u0002\u0368\u00bb",
     "\u0003\u0002\u0002\u0002\u0369\u0374\u0007\n\u0002\u0002\u036a\u0374",
     "\u0007\u000b\u0002\u0002\u036b\u0374\u0007\f\u0002\u0002\u036c\u0374",
@@ -647,8 +649,8 @@ var literalNames = [ null, "'nomask'", "'private'", "'protected'", "'public'",
                      "'-'", "'%'", "'/'", "'&'", "'|'", "'!'", "'<'", "'>'", 
                      "':'", "';'", "','", "'?'", "'''", "'\"'", "'{'", "'}'", 
                      "'['", "']'", "'('", "')'", "'*'", "'$'", null, null, 
-                     null, "'#define'", "'#include'", null, null, null, 
-                     "'#elseif'" ];
+                     null, "'\\'", "'#define'", "'#include'", null, null, 
+                     null, "'#elseif'" ];
 
 var symbolicNames = [ null, "NoMask", "Private", "Protected", "Public", 
                       "Static", "VarArgs", "Buffer", "Float", "Function", 
@@ -669,10 +671,11 @@ var symbolicNames = [ null, "NoMask", "Private", "Protected", "Public",
                       "DoubleQuote", "LeftBrace", "RightBrace", "LeftBracket", 
                       "RightBracket", "LeftParen", "RightParen", "Multiply", 
                       "FunctionalScope", "Identifier", "BlockComment", "LineComment", 
-                      "DefinePreprocessor", "IncludePreprocessor", "IfndefPreprocessor", 
-                      "IfdefPreprocessor", "IfPreprocessor", "ElseIfPreprocessor", 
-                      "EndIfPreprocessor", "IntegerLiteral", "FloatLiteral", 
-                      "StringLiteral", "CharacterLiteral", "Newline", "Whitespace" ];
+                      "MultipleLine", "DefinePreprocessor", "IncludePreprocessor", 
+                      "IfndefPreprocessor", "IfdefPreprocessor", "IfPreprocessor", 
+                      "ElseIfPreprocessor", "EndIfPreprocessor", "IntegerLiteral", 
+                      "FloatLiteral", "StringLiteral", "CharacterLiteral", 
+                      "Newline", "Whitespace" ];
 
 var ruleNames =  [ "lpcProgram", "programDeclarations", "comment", "programDeclaration", 
                    "preprocessorDirective", "includePreprocessor", "includeFileLiteral", 
@@ -813,19 +816,20 @@ LPCParser.FunctionalScope = 84;
 LPCParser.Identifier = 85;
 LPCParser.BlockComment = 86;
 LPCParser.LineComment = 87;
-LPCParser.DefinePreprocessor = 88;
-LPCParser.IncludePreprocessor = 89;
-LPCParser.IfndefPreprocessor = 90;
-LPCParser.IfdefPreprocessor = 91;
-LPCParser.IfPreprocessor = 92;
-LPCParser.ElseIfPreprocessor = 93;
-LPCParser.EndIfPreprocessor = 94;
-LPCParser.IntegerLiteral = 95;
-LPCParser.FloatLiteral = 96;
-LPCParser.StringLiteral = 97;
-LPCParser.CharacterLiteral = 98;
-LPCParser.Newline = 99;
-LPCParser.Whitespace = 100;
+LPCParser.MultipleLine = 88;
+LPCParser.DefinePreprocessor = 89;
+LPCParser.IncludePreprocessor = 90;
+LPCParser.IfndefPreprocessor = 91;
+LPCParser.IfdefPreprocessor = 92;
+LPCParser.IfPreprocessor = 93;
+LPCParser.ElseIfPreprocessor = 94;
+LPCParser.EndIfPreprocessor = 95;
+LPCParser.IntegerLiteral = 96;
+LPCParser.FloatLiteral = 97;
+LPCParser.StringLiteral = 98;
+LPCParser.CharacterLiteral = 99;
+LPCParser.Newline = 100;
+LPCParser.Whitespace = 101;
 
 LPCParser.RULE_lpcProgram = 0;
 LPCParser.RULE_programDeclarations = 1;
@@ -968,6 +972,14 @@ LpcProgramContext.prototype.exitRule = function(listener) {
 	}
 };
 
+LpcProgramContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitLpcProgram(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -1044,6 +1056,14 @@ ProgramDeclarationsContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ProgramDeclarationsContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitProgramDeclarations(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -1115,6 +1135,14 @@ CommentContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitComment(this);
 	}
+};
+
+CommentContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitComment(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -1211,6 +1239,14 @@ ProgramDeclarationContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitProgramDeclaration(this);
 	}
+};
+
+ProgramDeclarationContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitProgramDeclaration(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -1349,6 +1385,14 @@ PreprocessorDirectiveContext.prototype.exitRule = function(listener) {
 	}
 };
 
+PreprocessorDirectiveContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitPreprocessorDirective(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -1451,6 +1495,14 @@ IncludePreprocessorContext.prototype.exitRule = function(listener) {
 	}
 };
 
+IncludePreprocessorContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitIncludePreprocessor(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -1527,6 +1579,14 @@ IncludeFileLiteralContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitIncludeFileLiteral(this);
 	}
+};
+
+IncludeFileLiteralContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitIncludeFileLiteral(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -1636,6 +1696,14 @@ DefinePreprocessorContext.prototype.exitRule = function(listener) {
 	}
 };
 
+DefinePreprocessorContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitDefinePreprocessor(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -1716,6 +1784,14 @@ DefineConstantStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitDefineConstantStatement(this);
 	}
+};
+
+DefineConstantStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitDefineConstantStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -1800,6 +1876,14 @@ DefineMacroStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitDefineMacroStatement(this);
 	}
+};
+
+DefineMacroStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitDefineMacroStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -1896,6 +1980,14 @@ DefineMacroParameterListContext.prototype.exitRule = function(listener) {
 	}
 };
 
+DefineMacroParameterListContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitDefineMacroParameterList(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -1977,6 +2069,14 @@ VariableDeclarationContext.prototype.exitRule = function(listener) {
 	}
 };
 
+VariableDeclarationContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitVariableDeclaration(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -2043,6 +2143,14 @@ ProgramVariableDeclarationContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitProgramVariableDeclaration(this);
 	}
+};
+
+ProgramVariableDeclarationContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitProgramVariableDeclaration(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -2123,6 +2231,14 @@ FunctionDeclarationContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitFunctionDeclaration(this);
 	}
+};
+
+FunctionDeclarationContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionDeclaration(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -2207,6 +2323,14 @@ FunctionParametersContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitFunctionParameters(this);
 	}
+};
+
+FunctionParametersContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionParameters(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -2304,6 +2428,14 @@ ParameterListContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitParameterList(this);
 	}
+};
+
+ParameterListContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitParameterList(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -2419,6 +2551,14 @@ ParameterDefinitionContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ParameterDefinitionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitParameterDefinition(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -2498,6 +2638,14 @@ SpreadParameterDefinitionContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitSpreadParameterDefinition(this);
 	}
+};
+
+SpreadParameterDefinitionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitSpreadParameterDefinition(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -2585,6 +2733,14 @@ DataTypeListContext.prototype.exitRule = function(listener) {
 	}
 };
 
+DataTypeListContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitDataTypeList(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -2664,6 +2820,14 @@ FunctionDefinitionContext.prototype.exitRule = function(listener) {
 	}
 };
 
+FunctionDefinitionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionDefinition(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -2732,6 +2896,14 @@ AccessLevelModifierContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitAccessLevelModifier(this);
 	}
+};
+
+AccessLevelModifierContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitAccessLevelModifier(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -2808,6 +2980,14 @@ FunctionTypeModifierContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitFunctionTypeModifier(this);
 	}
+};
+
+FunctionTypeModifierContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionTypeModifier(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -2887,6 +3067,14 @@ FunctionModifierContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitFunctionModifier(this);
 	}
+};
+
+FunctionModifierContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionModifier(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -3002,6 +3190,14 @@ ClassDefinitionContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ClassDefinitionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitClassDefinition(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -3083,6 +3279,14 @@ ClassIdentifierContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ClassIdentifierContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitClassIdentifier(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -3159,6 +3363,14 @@ ClassMembersContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitClassMembers(this);
 	}
+};
+
+ClassMembersContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitClassMembers(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -3238,6 +3450,14 @@ ClassMemberInitializerContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ClassMemberInitializerContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitClassMemberInitializer(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -3304,6 +3524,14 @@ VariableModifierContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitVariableModifier(this);
 	}
+};
+
+VariableModifierContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitVariableModifier(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -3416,6 +3644,14 @@ VariableListContext.prototype.exitRule = function(listener) {
 	}
 };
 
+VariableListContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitVariableList(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -3495,6 +3731,14 @@ VariableContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitVariable(this);
 	}
+};
+
+VariableContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitVariable(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -3594,6 +3838,14 @@ VariableAssignmentExpressionContext.prototype.exitRule = function(listener) {
 	}
 };
 
+VariableAssignmentExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitVariableAssignmentExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -3658,6 +3910,14 @@ ArrayContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitArray(this);
 	}
+};
+
+ArrayContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitArray(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -3748,6 +4008,14 @@ ComparisonOperatorContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ComparisonOperatorContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitComparisonOperator(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -3818,6 +4086,14 @@ LogicalOperatorContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitLogicalOperator(this);
 	}
+};
+
+LogicalOperatorContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitLogicalOperator(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -3894,6 +4170,14 @@ BitOperatorContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitBitOperator(this);
 	}
+};
+
+BitOperatorContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitBitOperator(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -3988,6 +4272,14 @@ ArithmeticOperatorContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ArithmeticOperatorContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitArithmeticOperator(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -4062,6 +4354,14 @@ FunctionalDeclarationContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitFunctionalDeclaration(this);
 	}
+};
+
+FunctionalDeclarationContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionalDeclaration(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -4144,6 +4444,14 @@ AnonymousFunctionalDeclarationContext.prototype.exitRule = function(listener) {
 	}
 };
 
+AnonymousFunctionalDeclarationContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitAnonymousFunctionalDeclaration(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -4223,6 +4531,14 @@ FunctionalStartContext.prototype.exitRule = function(listener) {
 	}
 };
 
+FunctionalStartContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionalStart(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -4287,6 +4603,14 @@ FunctionalEndContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitFunctionalEnd(this);
 	}
+};
+
+FunctionalEndContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionalEnd(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -4365,6 +4689,14 @@ FunctionalParameterContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitFunctionalParameter(this);
 	}
+};
+
+FunctionalParameterContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionalParameter(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -4463,6 +4795,14 @@ CastOperationContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitCastOperation(this);
 	}
+};
+
+CastOperationContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitCastOperation(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -4652,6 +4992,14 @@ ExpressionContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitExpression(this);
 	}
+};
+
+ExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -4964,6 +5312,14 @@ TernaryExpressionContext.prototype.exitRule = function(listener) {
 	}
 };
 
+TernaryExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitTernaryExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -5051,6 +5407,14 @@ StringConcatExpressionContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitStringConcatExpression(this);
 	}
+};
+
+StringConcatExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitStringConcatExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -5176,6 +5540,14 @@ MemberIdentifierContext.prototype.exitRule = function(listener) {
 	}
 };
 
+MemberIdentifierContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitMemberIdentifier(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -5254,6 +5626,14 @@ IncrementExpressionContext.prototype.exitRule = function(listener) {
 	}
 };
 
+IncrementExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitIncrementExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -5312,6 +5692,14 @@ DecrementExpressionContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitDecrementExpression(this);
 	}
+};
+
+DecrementExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitDecrementExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -5384,6 +5772,14 @@ CatchExpressionContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitCatchExpression(this);
 	}
+};
+
+CatchExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitCatchExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -5470,6 +5866,14 @@ NewExpressionContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitNewExpression(this);
 	}
+};
+
+NewExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitNewExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -5566,6 +5970,14 @@ NewExpressionIdentifierContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitNewExpressionIdentifier(this);
 	}
+};
+
+NewExpressionIdentifierContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitNewExpressionIdentifier(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -5694,6 +6106,14 @@ OperatorContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitOperator(this);
 	}
+};
+
+OperatorContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitOperator(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -5848,6 +6268,14 @@ AssignmentOperatorContext.prototype.exitRule = function(listener) {
 	}
 };
 
+AssignmentOperatorContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitAssignmentOperator(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -5975,6 +6403,14 @@ NotExpressionContext.prototype.exitRule = function(listener) {
 	}
 };
 
+NotExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitNotExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -6043,6 +6479,14 @@ UnaryOperatorContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitUnaryOperator(this);
 	}
+};
+
+UnaryOperatorContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitUnaryOperator(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -6134,6 +6578,14 @@ LiteralContext.prototype.exitRule = function(listener) {
 	}
 };
 
+LiteralContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitLiteral(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -6148,7 +6600,7 @@ LPCParser.prototype.literal = function() {
         this.enterOuterAlt(localctx, 1);
         this.state = 602;
         _la = this._input.LA(1);
-        if(!(((((_la - 95)) & ~0x1f) == 0 && ((1 << (_la - 95)) & ((1 << (LPCParser.IntegerLiteral - 95)) | (1 << (LPCParser.FloatLiteral - 95)) | (1 << (LPCParser.StringLiteral - 95)) | (1 << (LPCParser.CharacterLiteral - 95)))) !== 0))) {
+        if(!(((((_la - 96)) & ~0x1f) == 0 && ((1 << (_la - 96)) & ((1 << (LPCParser.IntegerLiteral - 96)) | (1 << (LPCParser.FloatLiteral - 96)) | (1 << (LPCParser.StringLiteral - 96)) | (1 << (LPCParser.CharacterLiteral - 96)))) !== 0))) {
         this._errHandler.recoverInline(this);
         }
         else {
@@ -6220,6 +6672,14 @@ MappingDeclarationContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitMappingDeclaration(this);
 	}
+};
+
+MappingDeclarationContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitMappingDeclaration(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -6324,6 +6784,14 @@ MappingElementListContext.prototype.exitRule = function(listener) {
 	}
 };
 
+MappingElementListContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitMappingElementList(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -6420,6 +6888,14 @@ MappingElementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitMappingElement(this);
 	}
+};
+
+MappingElementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitMappingElement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -6537,6 +7013,14 @@ MappingKeyContext.prototype.exitRule = function(listener) {
 	}
 };
 
+MappingKeyContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitMappingKey(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -6611,6 +7095,14 @@ MappingValueContext.prototype.exitRule = function(listener) {
 	}
 };
 
+MappingValueContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitMappingValue(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -6677,6 +7169,14 @@ ArrayDeclarationContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitArrayDeclaration(this);
 	}
+};
+
+ArrayDeclarationContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitArrayDeclaration(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -6754,6 +7254,14 @@ ArrayStartContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ArrayStartContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitArrayStart(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -6818,6 +7326,14 @@ ArrayEndContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitArrayEnd(this);
 	}
+};
+
+ArrayEndContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitArrayEnd(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -6888,6 +7404,14 @@ IndexOperatorContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitIndexOperator(this);
 	}
+};
+
+IndexOperatorContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitIndexOperator(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -6963,6 +7487,14 @@ RangeContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitRange(this);
 	}
+};
+
+RangeContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitRange(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -7064,6 +7596,14 @@ IndexContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitIndex(this);
 	}
+};
+
+IndexContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitIndex(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -7171,6 +7711,14 @@ BlockContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitBlock(this);
 	}
+};
+
+BlockContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitBlock(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -7291,6 +7839,14 @@ StatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitStatement(this);
 	}
+};
+
+StatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -7443,6 +7999,14 @@ BreakStatementContext.prototype.exitRule = function(listener) {
 	}
 };
 
+BreakStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitBreakStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -7507,6 +8071,14 @@ ContinueStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitContinueStatement(this);
 	}
+};
+
+ContinueStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitContinueStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -7588,6 +8160,14 @@ StatementOrBlockContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitStatementOrBlock(this);
 	}
+};
+
+StatementOrBlockContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitStatementOrBlock(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -7698,6 +8278,14 @@ LoopStatementContext.prototype.exitRule = function(listener) {
 	}
 };
 
+LoopStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitLoopStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -7793,6 +8381,14 @@ WhileControlStatementContext.prototype.exitRule = function(listener) {
 	}
 };
 
+WhileControlStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitWhileControlStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -7867,6 +8463,14 @@ DoLoopStatementContext.prototype.exitRule = function(listener) {
 	}
 };
 
+DoLoopStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitDoLoopStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -7933,6 +8537,14 @@ WhileLoopStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitWhileLoopStatement(this);
 	}
+};
+
+WhileLoopStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitWhileLoopStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -8015,6 +8627,14 @@ ForControlStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitForControlStatement(this);
 	}
+};
+
+ForControlStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitForControlStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -8110,6 +8730,14 @@ ForLoopStatementContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ForLoopStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitForLoopStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -8189,6 +8817,14 @@ ForInitialStateContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitForInitialState(this);
 	}
+};
+
+ForInitialStateContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitForInitialState(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -8282,6 +8918,14 @@ ForLoopVariableContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ForLoopVariableContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitForLoopVariable(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -8354,6 +8998,14 @@ ForConditionContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ForConditionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitForCondition(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -8420,6 +9072,14 @@ ForIncrementStepContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ForIncrementStepContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitForIncrementStep(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -8484,6 +9144,14 @@ ForeachLoopStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitForeachLoopStatement(this);
 	}
+};
+
+ForeachLoopStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitForeachLoopStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -8566,6 +9234,14 @@ ForeachControlStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitForeachControlStatement(this);
 	}
+};
+
+ForeachControlStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitForeachControlStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -8657,6 +9333,14 @@ ForeachVariableListContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ForeachVariableListContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitForeachVariableList(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -8736,6 +9420,14 @@ ReturnStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitReturnStatement(this);
 	}
+};
+
+ReturnStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitReturnStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -8822,6 +9514,14 @@ FunctionCallContext.prototype.exitRule = function(listener) {
 	}
 };
 
+FunctionCallContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionCall(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -8898,6 +9598,14 @@ ScopedFunctionCallContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitScopedFunctionCall(this);
 	}
+};
+
+ScopedFunctionCallContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitScopedFunctionCall(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -9005,6 +9713,14 @@ ArgumentListContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ArgumentListContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitArgumentList(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -9095,6 +9811,14 @@ ExpressionListContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ExpressionListContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitExpressionList(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -9182,6 +9906,14 @@ FunctionNameContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitFunctionName(this);
 	}
+};
+
+FunctionNameContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionName(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -9277,6 +10009,14 @@ InheritanceDeclarationContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitInheritanceDeclaration(this);
 	}
+};
+
+InheritanceDeclarationContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitInheritanceDeclaration(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -9384,6 +10124,14 @@ StringExpressionContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitStringExpression(this);
 	}
+};
+
+StringExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitStringExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -9523,6 +10271,14 @@ DataTypeContext.prototype.exitRule = function(listener) {
 	}
 };
 
+DataTypeContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitDataType(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -9648,6 +10404,14 @@ FunctionReturnTypeContext.prototype.exitRule = function(listener) {
 	}
 };
 
+FunctionReturnTypeContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitFunctionReturnType(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -9743,6 +10507,14 @@ IdentifierContext.prototype.exitRule = function(listener) {
 	}
 };
 
+IdentifierContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitIdentifier(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -9813,6 +10585,14 @@ ConditionalStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitConditionalStatement(this);
 	}
+};
+
+ConditionalStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitConditionalStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -9895,6 +10675,14 @@ ConditionalExpressionContext.prototype.exitRule = function(listener) {
 	}
 };
 
+ConditionalExpressionContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitConditionalExpression(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -9972,6 +10760,14 @@ ElseStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitElseStatement(this);
 	}
+};
+
+ElseStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitElseStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -10098,6 +10894,14 @@ SwitchStatementContext.prototype.exitRule = function(listener) {
 	}
 };
 
+SwitchStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitSwitchStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -10197,6 +11001,14 @@ CaseLabelContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitCaseLabel(this);
 	}
+};
+
+CaseLabelContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitCaseLabel(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 
@@ -10308,6 +11120,14 @@ CaseStatementContext.prototype.exitRule = function(listener) {
 	}
 };
 
+CaseStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitCaseStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -10411,6 +11231,14 @@ DefaultSwitchStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof LPCListener ) {
         listener.exitDefaultSwitchStatement(this);
 	}
+};
+
+DefaultSwitchStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof LPCVisitor ) {
+        return visitor.visitDefaultSwitchStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 

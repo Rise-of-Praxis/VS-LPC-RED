@@ -24,7 +24,7 @@
 	],
 	"scripts": {
 		"build": "vsce package",
-		"build:grammar": "java -jar antlr-4.7.2-complete.jar -Dlanguage=JavaScript src/lpc/LPC.g4 -o src/lpc/.antlr && cp src/lpc/.antlr/*.js src/lpc/"
+		"build:grammar": "java -jar antlr-4.7.2-complete.jar -visitor -Dlanguage=JavaScript src/lpc/LPC.g4 -o src/lpc/.antlr && cp src/lpc/.antlr/*.js src/lpc/"
 	},
 	"main": "./src/extension.js",
 	"capabilities": {
