@@ -10,6 +10,7 @@ this file.
 - Updated LPC grammar so that comments prior to statements doesn't
   give a syntax error.
 - Updated LPC grammar so `#endif` can have text after it
+- Addressed various performance 
 
 ### Fixed
 
