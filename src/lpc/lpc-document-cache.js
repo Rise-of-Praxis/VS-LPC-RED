@@ -14,8 +14,7 @@ function getParsedLpcDocument(document)
 {
 
     const path = document.uri.path;
-    if (!_documentsCache.has(path)
-        || document.isDirty)
+    if (!_documentsCache.has(path))
     {
         const text = document.getText();
         const uri = document.uri;
