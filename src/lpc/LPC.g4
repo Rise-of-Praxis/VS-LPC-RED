@@ -12,7 +12,10 @@
 
 	Public				: 'public';
 
-	Static				: 'static';
+    // Deprecated in FluffOS v2019
+	// Static				: 'static';
+
+    NoSave              : 'nosave';
 
 	VarArgs				: 'varargs';
 
@@ -70,7 +73,8 @@
 
 	New					: 'new';
 
-	Array				: 'array';		// Deprecated in FluffOS v2019
+    // Deprecated in FluffOS v2019
+	// Array				: 'array';		
 
 	Ellipsis			: '...';
 
@@ -468,8 +472,9 @@
 
 	parameterList
 		:   spreadParameterDefinition
-		|	parameterDefinition Comma spreadParameterDefinition
-		|	parameterDefinition (Comma parameterDefinition)* spreadParameterDefinition?
+        |   parameterDefinition
+        |   parameterDefinition (Comma parameterDefinition)+
+        |   parameterDefinition (Comma parameterDefinition)* Comma spreadParameterDefinition?
 		;
 
 	parameterDefinition
@@ -506,7 +511,9 @@
 	functionTypeModifier
 		:	NoMask
 		|	VarArgs
-		|	Static
+
+        //  'static' keyword deprecated
+		//  |	Static
 		;
 
 	functionModifier
@@ -547,8 +554,9 @@
 	* Type modifiers applicable to variable
 	*/
 	variableModifier
-		: 	Static? accessLevelModifier
-		|	accessLevelModifier? Static;
+		: 	NoSave? accessLevelModifier
+		|	accessLevelModifier? NoSave
+        ;
 
 	/*
 	* A list of variables
@@ -571,7 +579,8 @@
 
 	array
 		:	Multiply
-		|	Array
+        // 'array' keyword was deprecated
+		// |	Array
 		;
 
 	/*
@@ -794,7 +803,8 @@
 		|	CharacterLiteral;
 
 	/*
-	* An LPC mapping declaration.  IE: ([ "myKey": "myValue" ])
+	* An LPC mapping declaration.  IE: ([ "myKey": "myValue" ]).  
+    * Mappings allow for dangling commas.
 	*/
 	mappingDeclaration
 		:	LeftParen LeftBracket mappingElementList? Comma? RightBracket RightParen
@@ -831,7 +841,7 @@
 		;
 
 	/*
-	* An LPC array declaration. ({ 1, 2, 3})
+	* An LPC array declaration. ({ 1, 2, 3}).  
 	*/
 	arrayDeclaration
 		:	arrayStart expressionList? arrayEnd
@@ -1000,7 +1010,8 @@
 		;
 
 	foreachVariableList
-		:	forLoopVariable (Comma forLoopVariable)*
+		:	forLoopVariable 
+        |   forLoopVariable (Comma forLoopVariable)+
 		;
 
 	/*
@@ -1035,10 +1046,11 @@
 		;
 
 	/*
-	* A list of expressions, separated by a comma
+	* A list of expressions, separated by a comma.  
+    * Expression lists allow dangling commas
 	*/
 	expressionList 
-		: 	expression (Comma expression)*
+		: 	expression (Comma comment* expression)* Comma?
 		;
 
 	/*
@@ -1076,7 +1088,9 @@
 		|	String
 		|	Buffer
 		|	classIdentifier
-		|	array				// Deprecated in FluffOS v2019, should be switched to mixed *
+
+        // Deprecated in FluffOS v2019
+		// |	array
 		;
 
 	/*
