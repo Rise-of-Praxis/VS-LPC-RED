@@ -1,8 +1,8 @@
-const { LPCDocument } = require('./lpc-document');
+const { LPCFile } = require('./lpc-file');
 const { LanguageId, LPCLanguageProvider } = require('./lpc-language-provider');
 
 module.exports = {
 	LanguageId, 
-	LPCDocument, 
+	LPCFile, 
 	LPCLanguageProvider
 };

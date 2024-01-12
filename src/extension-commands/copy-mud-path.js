@@ -3,15 +3,15 @@
 
 const { env, window } = require("vscode");
 
-/**
- * 
- * @param {ExtensionContext} context 
- */
-module.exports = async (context, uri) =>
+module.exports =
 {
-	const { path } = uri;
+    id: "copyMudPath",
+    command: async (context, uri) =>
+    {
+        const { path } = uri;
 
-	env.clipboard.writeText(path);
+        env.clipboard.writeText(path);
 
-	window.setStatusBarMessage(`Copied '${path}' to clipboard.`, 5000);
+        window.setStatusBarMessage(`Copied '${path}' to clipboard.`, 5000);
+    }
 }

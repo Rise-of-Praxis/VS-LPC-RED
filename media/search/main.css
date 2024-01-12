@@ -1,0 +1,328 @@
+@keyframes progress {
+    0% {
+        transform: translateX(0) scaleX(1)
+    }
+
+    50% {
+        transform: translateX(2500%) scaleX(3)
+    }
+
+    to {
+        transform: translateX(4900%) scaleX(1)
+    }
+}
+
+.mud-search-view {
+    --toggle-animation-speed: .1s;
+
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+
+    position: relative;
+}
+
+.mud-search-view .search-options 
+{
+    padding: 0 1.5rem;
+}
+
+.mud-search-view .search-options.hidden
+{
+    display: none;
+} 
+
+
+.mud-search-view .search-options .search-option
+{
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin-bottom: .5rem;
+}
+
+.mud-search-view .search-options .search-option > label
+{
+    font-size: .9rem;
+}
+
+.mud-search-view .search-options .search-option .option-wrapper
+{
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+    background-color: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-background, transparent);
+}
+
+.mud-search-view .search-options .search-option .option-wrapper {
+    position: relative;
+}
+
+.mud-search-view .search-options .search-option .option-wrapper:has(:focus) {
+    background-color: var(--vscode-input-background);
+    border-color: var(--vscode-focusBorder)
+}
+
+.mud-search-view .search-options .search-option.error .option-wrapper {
+    border: solid 1px var(--vscode-inputValidation-errorBorder);
+}
+
+.mud-search-view .search-options .search-option.error:has(:focus) .error-message {
+    display: inherit;
+}
+
+.mud-search-view .text-input {
+    font-size: 13px;
+    color: var(--vscode-input-foreground);
+    padding: 3px 0 3px 6px;
+    outline: none;
+    resize: none;
+    overflow: hidden;
+}
+
+.mud-search-view .controls
+{
+    display: flex;
+    flex-direction: row;
+}
+
+.checkbox-wrapper
+{
+    display: flex;
+}
+
+.checkbox-wrapper .codicon {
+    border: none;
+    padding: 3px 3px 6px 0;
+    margin: 0;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-wrapper input[type="checkbox"] + label
+{
+    border-radius: 3px;
+    border: solid 1px transparent;
+    height: 20px;
+    width: 20px;
+    margin: 1px;
+}
+
+.checkbox-wrapper input[type="checkbox"] + label:hover {
+    background-color: var(--vscode-inputOption-hoverBackground);
+}
+
+.option-wrapper .checkbox-wrapper input[type="checkbox"]:checked + label {
+    color: var(--vscode-inputOption-activeForeground);
+    border-color: var(--vscode-inputOption-activeBorder);
+    background-color: var(--vscode-inputOption-activeBackground);
+}
+
+.mirror {
+    position: absolute;
+    display: inline-block;
+    width: 100%;
+    top: 0;
+    left: 0;
+    visibility: hidden;
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    padding:  0 1rem;
+    color: red;
+}
+
+.count-badge
+{
+    padding: 3px 6px;
+    border-radius: .85rem;
+    font-size: .85rem;
+    height: 1.4rem;
+    line-height: .85rem;
+    font-weight: normal;
+    text-align: center;
+    display: inline-block;
+    box-sizing: border-box;
+    background-color: var(--vscode-badge-background);
+    color: var(--vscode-badge-foreground);
+}
+
+.search-results
+{
+    margin: 1rem 0 0 0;
+    padding: 0;
+    overflow: hidden;
+    color: rgb(204, 204, 204);
+    line-height: 1.5rem;
+}
+
+.search-results label
+{
+    white-space: nowrap;
+    overflow:  hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    flex-grow: 1;
+}
+
+.search-results .file
+{
+    display: flex;
+    flex-direction: column;
+}
+
+.search-results .file .title {
+    display: flex;
+    flex-direction: row;
+    padding: 0 1.5rem;
+    align-items: center;
+    cursor: pointer;
+}
+
+.search-results .file .title:hover
+{
+    background-color: var(--vscode-inputOption-hoverBackground);
+}
+
+.search-results .file .title .toggle 
+{
+    width: 1.5rem;
+    min-width: 1.5rem;
+    max-width: 1.5rem;
+    transition: all var(--toggle-animation-speed) ease-in;
+    flex-grow: 0;
+}
+
+.search-results .file.expanded .title .toggle 
+{
+    transform: rotate(90deg);
+}
+
+.search-results .file .title .count-badge {
+    flex-grow: 0;
+}
+
+.search-results .file .matches
+{
+    height: 0px;
+    transition: all var(--toggle-animation-speed) ease-in;
+    overflow: hidden;
+}
+
+.search-results .file .matches .match
+{
+    display: flex;
+    flex-direction: row;
+    word-wrap: pre;
+    padding-left: 3rem;
+}
+
+.search-results .file .matches .match:hover
+{
+    background-color: var(--vscode-inputOption-hoverBackground);
+}
+
+.search-results .file .matches .match .match-text
+{
+    background-color: var(--vscode-searchEditor-findMatchBackground);
+}
+
+.mud-search-view.cancelled .search-cancelled
+{
+    display: inherit;
+}
+
+.mud-search-view .search-cancelled
+{
+    display: none;
+}
+
+.info-panel
+{
+    color: var(--vscode-search-resultsInfoForeground);
+    padding: 0 1.5rem;
+}
+
+.mud-search-view .search-results:not(:has(.file)) + .completed
+{
+    border: solid 1px white;
+}
+
+.mud-search-view .advanced-options
+{
+    position: relative;
+}
+
+.mud-search-view .advanced-options .search-option
+{
+    display: none;
+}
+
+.mud-search-view .advanced-options > .checkbox-wrapper {
+    position: absolute;
+    right: 0;
+    font-size: .5rem;
+    top: -.5rem;
+    z-index: 2;
+}
+
+
+.mud-search-view .advanced-options:has(#show-adv-options:checked)
+{
+    padding-top: inherit;
+}
+
+.mud-search-view .advanced-options:has(#show-adv-options:checked) .search-option
+{
+    display: inherit;
+}
+
+.error-message {
+    position: absolute;
+    top: 100%;
+    z-index: 100;
+    padding: .25rem;
+    display: none;
+    color: var(--vscode-inputValidation-errorForeground);
+    background-color: var(--vscode-inputValidation-errorBackground);
+    border: solid 1px var(--vscode-inputValidation-errorBorder);
+}
+
+.progress-bar-container {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    margin:0;
+    padding: 0;
+    z-index: 5;
+}
+
+.progress-bar-container .progress-indicator {
+    background-color: var(--vscode-progressBar-background);
+    width: 2%;
+    height: 2px;
+    opacity: 1;
+
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
+    transform: translateZ(0);
+    animation-timing-function: linear;
+    animation-timing-function: steps(100);
+}
+
+.mud-search-view.searching .progress-bar-container
+{
+    display: inherit;
+}
+
+.mud-search-view.searching .progress-bar-container .progress-indicator{
+    animation-name: progress;
+}

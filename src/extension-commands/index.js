@@ -1,13 +1,8 @@
-const createNewWorkspace = require('./create-new-workspace');
-const registerFileSystem = require('./register-file-system');
-const addMyRealms = require('./add-my-realms');
-const registerLanguageFeatures = require('./register-language-features');
-const copyMudPath = require('./copy-mud-path');
-
-module.exports = {
-	createNewWorkspace,
-	registerFileSystem,
-	registerLanguageFeatures,
-	addMyRealms,
-	copyMudPath
-}
+module.exports = [
+	require('./create-new-workspace'),
+	require('./add-my-realms'),
+    require('./copy-mud-path'),
+    require("./find-outdated-files"),
+    require("./clear-search-results"),
+    require("./cancel-search")
+]

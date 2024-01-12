@@ -1,6 +1,7 @@
 const EventEmitter = require("events");
 const { Socket } = require("net");
 const { Uri } = require("vscode");
+const { FileInfo } = require("../file-system/file-info");
 
 /**
  * @typedef {object} RemoteEditorClientOptions
@@ -61,13 +62,17 @@ class RemoteEditorClient extends EventEmitter
 	 * Generates a Uri that can be used to access a path
 	 * 
 	 * @param {string} path The path to access
+     * @param {string|Uri} [basePath] The base path to resolve relative paths from 
 	 * @returns {Uri}
 	 */
-	getFileUri(path, baseUri)
-	{
-		if (baseUri)
-			path = this.resolvePath(path, baseUri.path);
-
+	getFileUri(path, basePath)
+    {
+        if (basePath)
+        {
+            const base = typeof(basePath) === "string" ? basePath : basePath.path;
+            path = this.resolvePath(path, base);
+        }
+        
 		return Uri.from({ scheme: this.scheme, path });
 	}
 
@@ -79,7 +84,10 @@ class RemoteEditorClient extends EventEmitter
 	 */
 	resolvePath(path, basePath)
 	{
-		const parts = [];
+        const parts = [];
+        
+        if (!path.length && basePath)
+            return basePath;
 
 		// basePath is only used if the path is not absolute (ie: starts with the path separator)
 		if (!path.startsWith(this.pathSeparator))
@@ -115,7 +123,7 @@ class RemoteEditorClient extends EventEmitter
 	 * Reads the content of a directory
 	 *
 	 * @param {string} path The path to get the directory listing for
-	 * @returns {Promise<import("../types").FileInfo[]>}
+	 * @returns {Promise<FileInfo[]>}
 	 */
 	async readDirectory(path) { throw new Error("Not implemented"); }
 
@@ -137,7 +145,7 @@ class RemoteEditorClient extends EventEmitter
 	 * Gets information about a file or directory
 	 * 
 	 * @param {string} path The path to get the file information
-	 * @returns {Promise<import("../types").FileInfo>}
+	 * @returns {Promise<FileInfo>}
 	 */
 	async getFileInfo(path) { throw new Error("Not implemented"); }
 
@@ -211,7 +219,14 @@ class RemoteEditorClient extends EventEmitter
 	 * @returns {Promise}
 	 * @async
 	 */
-	async copy(oldPath, newPath, options) { throw new Error("Not implemented"); }
+    async copy(oldPath, newPath, options) { throw new Error("Not implemented"); }
+    
+   /**
+    * Connects the client to the mud
+    * @returns {Promise}
+    * @async
+    */
+   async connect()  { throw new Error("Not implemented"); }
 
 	/**
 	 * Renames a file or directory from one location to another location
