@@ -3,6 +3,12 @@
 All notable changes to the "lpc-remote-editor" extension will be documented in 
 this file.
 
+## [0.6.1]
+
+### Fixed
+
+- Added a fix for handling special characters files
+
 ## [0.6.0]
 
 ### Added
