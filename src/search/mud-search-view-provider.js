@@ -170,9 +170,8 @@ class SearchViewProvider
         commands.executeCommand("setContext", `${viewId}.searching`, true);
     }
 
-    async #didCompleteSearch(searchOptions)
+    async #didCompleteSearch(searchContext)
     {
-        const searchContext = this.#currentSearchContext;
         if (searchContext)
         {
             const cancellationTokenSource = searchContext.cancellationTokenSource;
@@ -218,17 +217,18 @@ class SearchViewProvider
         }
 
         // If there is already a search happening, cancel it
-        if (!this.#currentSearchContext)
+        if (this.#currentSearchContext)
             await this.cancel();
 
         await this.clear();
 
-        this.#currentSearchContext = {
+        const currentContext = {
             path,
             searchOptions,
             viewOptions,
             cancellationTokenSource: new CancellationTokenSource()
         }
+        this.#currentSearchContext = currentContext;
         const fileSystem = getFileSystem();
 
         await window.withProgress(
@@ -265,7 +265,8 @@ class SearchViewProvider
                     await this.#sendWebviewMessage({ type: "search-error", name: err.name, message: err.message })
                 }
 
-                await this.#didCompleteSearch(options);
+
+                await this.#didCompleteSearch(currentContext);
             }
         );
     }
@@ -436,12 +437,10 @@ class SearchViewProvider
 
         searchCancellationTokenSource.cancel();
 
-        this.#currentSearchContext = null;
-
         await this.#sendWebviewMessage({ type: "cancelled" });
 
-
         this.#didCancelSearchEvent.fire();
+        this.#currentSearchContext = null;
     }
 
     reveal()

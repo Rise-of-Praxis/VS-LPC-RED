@@ -62,6 +62,11 @@ class RiseOfPraxisClient extends RemoteEditorClient
     #connection;
 
     /**
+     * @type {boolean}
+     */
+    #disposing;
+
+    /**
      * The connection options
      * @type {RiseOfPraxisConnectionOptions}
      */
@@ -598,11 +603,16 @@ class RiseOfPraxisClient extends RemoteEditorClient
         return true;
     }
 
-    dispose()
+    async dispose()
     {
+        if (this.#disposing)
+            return;
+
+        this.#disposing = true;
+
         if (this.#connection)
         {
-            this.#sendMessage("quit\n");
+            await this.#sendMessage("quit\n");
             this.#connection.end();
             this.#connection = null;
         }

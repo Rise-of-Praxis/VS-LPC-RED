@@ -69,9 +69,9 @@ function activate(context)
 }
 
 // this method is called when your extension is deactivated
-function deactivate()
+async function deactivate()
 { 
-	closeRemoteEditorClient();
+	await closeRemoteEditorClient();
 }
 
 module.exports = {
