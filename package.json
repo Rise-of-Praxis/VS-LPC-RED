@@ -1,16 +1,16 @@
 {
 	"name": "lpc-remote-editor",
-	"displayName": "Remote Editor for LP MUDs",
-	"description": "Enables creators on an LP MUD to remotely edit code through VS Code",
+	"displayName": "Remote Editor for Rise of Praxis",
+	"description": "Enables creators on Rise of Praxis to remotely edit code through VS Code",
 	"preview": true,
 	"license": "MIT",
 	"files": [
 		"content"
 	],
 	"publisher": "rise-of-praxis",
-	"version": "0.2.4",
+	"version": "0.3.0",
 	"engines": {
-		"vscode": "^1.61.0"
+		"vscode": "^1.84.2"
 	},
 	"categories": [
 		"Other"
@@ -20,11 +20,11 @@
 	},
 	"activationEvents": [
 		"onFileSystem:lpc-remote-ed",
-		"onCommand:lpc-remote-editor.createNewWorkspace",
 		"onLanguage:lpc"
 	],
 	"scripts": {
-		"build": "vsce package"
+		"build": "vsce package",
+		"build:grammar": "java -jar antlr-4.7.2-complete.jar -Dlanguage=JavaScript src/lpc/LPC.g4 -o src/lpc/.antlr && cp src/lpc/.antlr/*.js src/lpc/"
 	},
 	"main": "./src/extension.js",
 	"capabilities": {
@@ -96,17 +96,20 @@
 		}
 	},
 	"devDependencies": {
+		"@babel/cli": "^7.15.7",
+		"@babel/core": "^7.23.5",
+		"@babel/plugin-transform-modules-commonjs": "^7.23.3",
+		"@babel/preset-env": "^7.15.8",
 		"@types/glob": "^7.1.4",
 		"@types/mocha": "^9.0.0",
 		"@types/node": "14.x",
 		"@types/vscode": "^1.61.0",
 		"@vscode/test-electron": "^1.6.2",
+		"antlr4": "4.7.2",
 		"eslint": "^7.32.0",
 		"glob": "^7.1.7",
 		"mocha": "^9.1.1",
 		"vsce": "^1.100.1"
 	},
-	"dependencies": {
-		"antlr4": "^4.9.2"
-	}
+	"dependencies": {}
 }
