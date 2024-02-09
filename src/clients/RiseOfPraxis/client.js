@@ -422,6 +422,10 @@ class RiseOfPraxisClient extends RemoteEditorClient
 	 */
 	async getFileInfo(path)
 	{
+		// TODO: Make this configurable
+		if (path.indexOf("/.vscode") !== -1)
+			throw FileSystemError.FileNotFound(path);
+
 		const response = await this.#sendMessage(`info ${path}\n`);
 		if (response.statusCode === "404")
 			throw FileSystemError.FileNotFound(path);
@@ -430,6 +434,18 @@ class RiseOfPraxisClient extends RemoteEditorClient
 		fileInfo.uri = this.getFileUri(path);
 
 		return fileInfo;
+	}
+
+	/**
+	 * Simple check to see if a path exists
+	 * 
+	 * @param {string} path The path to check
+	 * @returns {Promise<boolean>}
+	 */
+	async pathExists(path)
+	{
+		const response = await this.#sendMessage(`info ${path}\n`);
+		return (response.statusCode !== "404");
 	}
 
 	/**

@@ -8,15 +8,40 @@ const remoteEditorClients = {
 	"rise-of-praxis": RiseOfPraxisClient
 }
 
-module.exports = {
-	RemoteEditorClient,
+/**
+ * A singleton instance of the RemoteEditorClient
+ * @type {RemoteEditorClient}
+ */
+let clientInstance = null;
 
-	/**
-	 * 
-	 * @param {object} [options] The options use to create the client
-	 * @returns {RemoteEditorClient}
-	 */
-	createRemoteEditorClient: (options) =>
+function getRemoteEditorClient()
+{
+	{
+		if (clientInstance === null)
+			clientInstance = createRemoteEditorClient();
+
+		return clientInstance;
+	}
+}
+
+function closeRemoteEditorClient()
+{
+	{
+		if (clientInstance !== null)
+		{
+			clientInstance.dispose();
+			clientInstance = null;
+		}
+	}
+}
+
+/**
+ * 
+ * @param {object} [options] The options use to create the client
+ * @returns {RemoteEditorClient}
+ */
+function createRemoteEditorClient(options)
+{
 	{
 		const config = getConfiguration();
 
@@ -44,5 +69,11 @@ module.exports = {
 
 		return client;
 	}
+}
 
+module.exports = {
+	RemoteEditorClient,
+	getRemoteEditorClient,
+	createRemoteEditorClient,
+	closeRemoteEditorClient
 }

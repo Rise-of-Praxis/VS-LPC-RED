@@ -3,6 +3,18 @@
 All notable changes to the "lpc-remote-editor" extension will be documented in 
 this file.
 
+## [0.4.0]
+
+### Fixed
+
+- Fixed issue where functions that were declared prior to being defined caused
+issues with "Find Definition" and "Find Occurences".
+
+### Added
+
+- Added support for `#include` and `inherits` document links.
+
+
 ## [0.3.1]
 
 ### Fixed
