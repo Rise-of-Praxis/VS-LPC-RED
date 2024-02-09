@@ -9,7 +9,7 @@ module.exports = async (connectionOptions, path) =>
 	const response = await request.send(`ls ${path}\n`);
 
 	const entries = [];
-	const listing = response.data.split('\n');
+	const listing = response.content.split('\n');
 
 	for (const entry of listing)
 	{

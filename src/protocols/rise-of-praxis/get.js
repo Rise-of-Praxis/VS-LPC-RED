@@ -7,9 +7,8 @@ module.exports = async (connectionOptions, path) =>
 	const response = await request.send(`get ${path}\n`);
 	if (response.statusCode === "404")
 		throw FileSystemError.FileNotFound(path);
-	else if (response.statusCode === "400"
-		&& response.status === "File is too large to get")
-		throw FileSystemError.Unavailable(path);
+	else if (response.statusCode !== "200")
+		throw new FileSystemError(response.status);
 
-	return Buffer.from(response.data);
+	return Buffer.from(response.content);
 }
