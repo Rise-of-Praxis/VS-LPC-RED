@@ -19,6 +19,9 @@ module.exports = async (context) =>
 		password: config.get("password")
 	};
 
+	if(config.get('useOutputChannel'))
+		connectionOptions.outputChannel = window.createOutputChannel('Remote Editor');
+
 	const client = new RemoteEditorClient(connectionOptions);
 	const fileSystem = new FileSystem(client);
 	if(!registeredFileSystem)
