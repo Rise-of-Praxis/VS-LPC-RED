@@ -80,9 +80,11 @@ class LPCDocument extends LPCListener
 		const client = getRemoteEditorClient();
 		this.#remoteEditorClient = client;
 
-		// Walk the parse tree.  This should be the absolute last step in the constructor
-		const walker = new tree.ParseTreeWalker()
-		walker.walk(this, lpcProgram);
+        // Walk the parse tree.  This should be the absolute last step in the constructor
+        const walker = new tree.ParseTreeWalker()
+        const startTime = Date.now();
+        walker.walk(this, lpcProgram);
+        console.log(`Parsing ${uri} took ${Date.now() - startTime}ms.`);
 	}
 
 	/**
@@ -496,13 +498,13 @@ class LPCDocument extends LPCListener
 	enterParameterDefinition(ctx)
 	{
 		this.addDocumentSymbol(ctx);
-	}
+    }
 
 	enterFunctionDeclaration(ctx)
 	{
 		this.#currentFunctionSymbol = undefined;
 		const symbol = this.addDocumentSymbol(ctx);
-		this.#currentFunctionSymbol = symbol;
+        this.#currentFunctionSymbol = symbol;
 	}
 
 	enterFunctionDefinition(ctx)
@@ -560,7 +562,7 @@ class LPCDocument extends LPCListener
 		const scope = this.getIdentifierDeclarationScope(name);
 
 		const range = this.createRange(ctx);
-		const identifier = { name, range, scope };
+        const identifier = { name, range, scope };
 
 		// Find where this symbol is defined and add it to that occurrence
 		this.addIdentifierOccurrence(identifier);

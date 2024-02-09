@@ -44,7 +44,18 @@ function onDocumentChanged(document)
     _documentsCache.delete(path);
 }
 
+/**
+ * Called when a document is closed
+ * @param {TextDocument} document The document that was closed
+ */
+function onDocumentClosed(document)
+{
+    const path = document.uri.path;
+    _documentsCache.delete(path);
+}
+
 module.exports = {
     getParsedLpcDocument,
-    onDocumentChanged
+    onDocumentChanged,
+    onDocumentClosed
 };

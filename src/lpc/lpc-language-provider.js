@@ -3,10 +3,22 @@ const { extname } = require("path");
 const documentCache = require("./lpc-document-cache");
 const { getRemoteEditorClient } = require("../clients");
 
-
 const LanguageId = "lpc";
 
 const validIdentifierRegEx = /^[a-zA-Z_][a-zA-Z0-9_]*$/m;
+
+function debounce(func, timeout = 500)
+{
+    if (!timeout)
+        return func;
+
+    let timer;
+
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { func.apply(this, args); }, timeout);
+    };
+}
 
 class LPCLanguageProvider
 {
@@ -183,32 +195,42 @@ class LPCLanguageProvider
 	/**
 	 * Subscribes to document changes
 	 * @param {ExtensionContext} context 
-	 * @param {DiagnosticCollection} diagnosticCollection
 	 */
-	subscribeToDocumentChanges(context, diagnosticCollection)
-	{
+	subscribeToDocumentChanges(context)
+    {
+        const lpcSyntaxDiagnostics = languages.createDiagnosticCollection("lpc-syntax");
+        context.subscriptions.push(lpcSyntaxDiagnostics);
+        
 		if (window.activeTextEditor)
-			this.refreshDiagnostics(window.activeTextEditor.document, diagnosticCollection);
+            this.refreshDiagnostics(window.activeTextEditor.document, lpcSyntaxDiagnostics);
+        
+        const onDidChangeActiveTextEditorHandler = debounce(editor =>
+        {
+            if (editor)
+                this.refreshDiagnostics(editor.document, lpcSyntaxDiagnostics);
+        });
+
+        const onDidChangeTextDocumentHandler = debounce(e =>
+        {
+            const { document } = e;
+            documentCache.onDocumentChanged(document);
+            this.refreshDiagnostics(document, lpcSyntaxDiagnostics)
+        });
 
 		context.subscriptions.push(
-			window.onDidChangeActiveTextEditor(editor =>
-			{
-				if (editor)
-					this.refreshDiagnostics(editor.document, diagnosticCollection);
-			})
+			window.onDidChangeActiveTextEditor(onDidChangeActiveTextEditorHandler)
+		);
+
+        context.subscriptions.push(
+            workspace.onDidChangeTextDocument(onDidChangeTextDocumentHandler)
 		);
 
 		context.subscriptions.push(
-			workspace.onDidChangeTextDocument(e =>
-			{
-				const { document } = e;
-				documentCache.onDocumentChanged(document);
-				this.refreshDiagnostics(document, diagnosticCollection)
-			})
-		);
-
-		context.subscriptions.push(
-			workspace.onDidCloseTextDocument(doc => diagnosticCollection.delete(doc.uri))
+            workspace.onDidCloseTextDocument(document =>
+            {
+                documentCache.onDocumentClosed(document);
+                lpcSyntaxDiagnostics.delete(document.uri)
+            })
 		);
 	}
 
@@ -273,11 +295,7 @@ class LPCLanguageProvider
 		languages.registerReferenceProvider(documentSelector, this);
 		languages.registerDocumentLinkProvider(documentSelector, this);
 
-		// Subscript to document changes so things can be reloaded
-		const { lpcSyntaxDiagnostics } = config;
-
-		if (lpcSyntaxDiagnostics)
-			this.subscribeToDocumentChanges(context, lpcSyntaxDiagnostics);
+        this.subscribeToDocumentChanges(context);
 
 		// Mark any .c files as lpc files.
 		workspace.onDidOpenTextDocument((document) =>
@@ -287,10 +305,10 @@ class LPCLanguageProvider
 				return;
 
 			const ext = extname(uri.path);
-			if (ext === ".c"
+			if ((ext === ".c" || ext === ".h")
 				&& document.languageId !== LanguageId)
 				languages.setTextDocumentLanguage(document, LanguageId);
-		});
+        });
 	}
 }
 

@@ -3,13 +3,24 @@
 All notable changes to the "lpc-remote-editor" extension will be documented in 
 this file.
 
+## [0.4.3]
+
+### Updated
+
+- Updated LPC grammar so that comments prior to statements doesn't
+  give a syntax error.
+- Updated LPC grammar so `#endif` can have text after it
+
+### Fixed
+
+- Fixed relative path resolution for `#include "../some/path"`
+
 ## [0.4.2]
 
 ### Fixed
 
 - Support for fetching large files
 - Support for renaming/moving directories
-
 
 ## [0.4.1]
 

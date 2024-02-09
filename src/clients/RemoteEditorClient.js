@@ -100,9 +100,11 @@ class RemoteEditorClient extends EventEmitter
 			if (part === ".")
 				continue;
 
-			if (part === "..")
-				resolvedParts.pop();
-
+            if (part === "..")
+            {
+                resolvedParts.pop();
+                continue;
+            }
 			resolvedParts.push(part);
 		}
 
