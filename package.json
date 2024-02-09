@@ -3,11 +3,12 @@
 	"displayName": "Remote Editor for LP MUDs",
 	"description": "Enables creators on an LP MUD to remotely edit code through VS Code",
 	"preview": true,
+	"license": "MIT",
 	"files": [
 		"content"
 	],
 	"publisher": "rise-of-praxis",
-	"version": "0.0.3",
+	"version": "0.1.0",
 	"engines": {
 		"vscode": "^1.61.0"
 	},
@@ -19,7 +20,8 @@
 	},
 	"activationEvents": [
 		"onFileSystem:lpc-remote-ed",
-		"onCommand:lpc-remote-editor.createNewWorkspace"
+		"onCommand:lpc-remote-editor.createNewWorkspace",
+		"onLanguage:lpc"
 	],
 	"scripts": {
 		"build": "vsce package"
@@ -47,6 +49,12 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Creates a channel in the Output Window containing debugging information."
+				},
+				"lpcRemoteEditor.enableLanguageFeatures": {
+					"title": "Enable LPC Language Features",
+					"type": "boolean",
+					"default": true,
+					"description": "Enables LPC specific language features in VS Code, such as document outlines and refactoring support."
 				}
 			}
 		}
@@ -63,6 +71,6 @@
 		"vsce": "^1.100.1"
 	},
 	"dependencies": {
-		"handlebars": "^4.7.7"
+		"antlr4": "^4.9.2"
 	}
 }
