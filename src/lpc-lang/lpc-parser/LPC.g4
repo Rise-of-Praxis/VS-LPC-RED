@@ -628,7 +628,7 @@ expression
 	|	expression Ellipsis
 
 	//	Support for "string" "string" concatenation
-	|	StringLiteral StringLiteral
+	|	StringLiteral StringLiteral+
     ;
 
 /*
