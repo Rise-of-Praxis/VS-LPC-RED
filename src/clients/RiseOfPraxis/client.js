@@ -227,6 +227,10 @@ class RiseOfPraxisClient extends RemoteEditorClient
                 return handleError(`Server sent invalid response: ${text}`);
             let response = this.#processResponse(text);
 
+            // HACK: Attempt one more time, but force ASCII encoding.
+            if (response === undefined)
+                response = this.#processResponse(buffer.toString("ascii"));
+
             // If the data returned is not valid, wait because there may be more data that 
             // is being streamed back
             if (response === undefined)
