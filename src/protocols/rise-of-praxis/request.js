@@ -1,4 +1,5 @@
 const EventEmitter = require("events");
+const { connect } = require("http2");
 const { Socket } = require("net");
 const { window } = require("vscode");
 
@@ -210,7 +211,7 @@ class RemoteEditorRequest extends EventEmitter
 					this.#log(` -> Content is ${response.size} bytes long`);
 
 				if (typeof (callback) === "function")
-					callback(response, connection);
+					await callback(response, connection);
 
 				connection.write("quit\n");
 				connection.end();
