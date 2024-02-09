@@ -2,6 +2,13 @@
 
 All notable changes to the "lpc-remote-editor" extension will be documented in this file.
 
+## [0.0.3]
+
+### Added
+
+- Added 'Create new LPC Remote Editor workspace' command.
+
+
 ## [0.0.2]
 
 ### Added

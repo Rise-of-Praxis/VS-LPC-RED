@@ -3,6 +3,9 @@
 	"displayName": "Remote Editor for LP MUDs",
 	"description": "Enables creators on an LP MUD to remotely edit code through VS Code",
 	"preview": true,
+	"files": [
+		"content"
+	],
 	"publisher": "rise-of-praxis",
 	"version": "0.0.2",
 	"engines": {
@@ -15,7 +18,8 @@
 		"url": "https://github.com/AdamM-AU/VS-LPC-RED.git"
 	},
 	"activationEvents": [
-		"onFileSystem:lpc-remote-ed"
+		"onFileSystem:lpc-remote-ed",
+		"onCommand:lpc-remote-editor.createNewWorkspace"
 	],
 	"scripts": {
 		"build": "vsce package"
@@ -28,44 +32,22 @@
 		"undeadfish.vscode-lpc-lang"
 	],
 	"contributes": {
-		"configuration" : {
+		"commands": [
+			{
+				"title": "Create new LPC Remote Editor workspace",
+				"category": "Remote Editor for LP MUDs",
+				"command": "lpc-remote-editor.createNewWorkspace"
+			}
+		],
+		"configuration": {
 			"title": "LPC Remote Editor for LP MUDs",
 			"properties": {
-				"lpcRemoteEditor.uri": {
-					"title": "Host",
-					"type": "string",
-					"format": "uri",
-					"description": "The uri used to connect to the MUD"
-				},
-				"lpcRemoteEditor.userName": {
-					"title": "User Name",
-					"type": "string",
-					"description": "The MUD username to use for the connection"
-				},
-				"lpcRemoteEditor.password": {
-					"title": "Password",
-					"type": "string",
-					"description": "The MUD password to use for the connection"
-				},
 				"lpcRemoteEditor.useOutputChannel": {
 					"title": "Use Debug Output Channel",
 					"type": "boolean",
 					"default": false,
 					"description": "Creates a channel in the Output Window containing debugging information."
-				},
-				"lpcRemoteEditor.addMyRealmFolderOnStartup": {
-					"title": "Add Realm folder on startup",
-					"type": "boolean",
-					"default": true,
-					"description": "In addition to the the existin base directory, a workspace folder, called My Realm, is automatically added and is mapped to your creator directory."
-				},
-				"lpcRemoteEditor.myRealmTitle": {
-					"title": "Title of My Realm",
-					"type": "string",
-					"default": "My Realm",
-					"description": "The name of the workspace folder that is added to represent the creator's realm."
 				}
-
 			}
 		}
 	},
@@ -79,5 +61,8 @@
 		"glob": "^7.1.7",
 		"mocha": "^9.1.1",
 		"vsce": "^1.100.1"
+	},
+	"dependencies": {
+		"handlebars": "^4.7.7"
 	}
 }

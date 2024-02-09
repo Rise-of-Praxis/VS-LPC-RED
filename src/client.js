@@ -1,6 +1,7 @@
+const { Uri, FileType, window } = require("vscode");
+const { URL } = require("url");
 const getCommandProtocol = require("./protocols");
-const { Directory, File } = require("./file-system");
-const { Uri, FileType } = require("vscode");
+const { getConfiguration } = require("./utilities/configuration");
 
 class RemoteEditorClient
 {
@@ -28,23 +29,6 @@ class RemoteEditorClient
 	getFileUri(path) { return Uri.parse(`${this.scheme}:${path}`); }
 
 	/**
-	 * Creates a {@link File} or {@link Directory} for the file information provided
-	 * 
-	 * @param {FileInfo} fileInfo The object containing the file information
-	 * @returns {File | Directory}
-	 */
-	#createFileEntry(fileInfo)
-	{
-		const fileMeta = { ...fileInfo };
-		fileMeta.uri = Uri.parse(`${this.scheme}:${fileMeta.path}`);
-
-		if (fileMeta.type === FileType.Directory)
-			return new Directory(fileMeta);
-		else
-			return new File(fileMeta);
-	}
-
-	/**
 	 * Reads the content of a directory
 	 *
 	 * @param {string} path The path to get the directory listing for
@@ -52,23 +36,14 @@ class RemoteEditorClient
 	 */
 	async readDirectory(path)
 	{
-		const listing = await this.#protocol.ls(path);
-		const directory = new Directory({ name: path });
-		const { entries } = directory;
-
-		listing.forEach((meta) => 
-		{
-			const fileEntry = this.#createFileEntry(meta);
-			entries.set(fileEntry.name, fileEntry);
-		});
-
-		return directory;
+		return this.#protocol.ls(path);
 	}
-	
+
 	/** 
 	 * Creates a new directory
 	 */
-	async createDirectory(path) {
+	async createDirectory(path)
+	{
 		return this.#protocol.mkdir(path);
 	}
 
@@ -100,7 +75,7 @@ class RemoteEditorClient
 	 * Reads a file
 	 * 
 	 * @param {string} path The path of the file to read 
-	 * @returns {Buffer} The file content
+	 * @returns {Promise<Buffer>} The file content
 	 */
 	async readFile(path)
 	{
@@ -136,7 +111,7 @@ class RemoteEditorClient
 	 * @param {string} path The path of the directory to delete
 	 * @param {object} options Options used for deleting the directory
 	 */
-	 async deleteDirectory(path, options)
+	async deleteDirectory(path, options)
 	{
 		this.#protocol.rmdir(path, options);
 	}
@@ -148,9 +123,29 @@ class RemoteEditorClient
 	 * @param {string} newPath The path of the target file
 	 * @param {object} options Options used for copying the file
 	 */
-	 async copy(oldPath, newPath, options) {
+	async copy(oldPath, newPath, options)
+	{
 		this.#protocol.cp(oldPath, newPath, options);
 	}
 }
 
-module.exports = RemoteEditorClient;
+/**
+ * Creates an instance of the Remote Editor Client based on supplied options or the current workspace configuration
+ * @param {object} [options] The options to create a remote editor client with
+ * @returns {RemoteEditorClient}
+ */
+module.exports = (options) =>
+{
+	const config = getConfiguration();
+
+	const outputChannel = window.createOutputChannel('Remote Editor');
+
+	const connectionOptions = options || {
+		uri: new URL(config.uri),
+		userName: config.userName,
+		password: config.password,
+		outputChannel: config.connectionDebugging ? outputChannel : undefined,
+	};
+
+	return new RemoteEditorClient(connectionOptions);
+};
