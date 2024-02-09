@@ -64,9 +64,8 @@ which is limited to only the directories and files located under `/realms/superc
 
 ## Requirements
 
-The Remote Editor for LPC MUDs has a dependency on the LPC Language extension.  This extension helps provide the appropriate
-syntax highlighting for the LPC language for any `.c` or `.h` file that is opened in the editor.
-
+The Remote Editor for LPC MUDs does not have a dependency on the LPC Language extension, but is strongly recommended.  This extension helps provide the appropriate syntax highlighting for the LPC language for any `.c` or `.h` file that is 
+opened in the editor.
 
 ## Release Notes
 

@@ -2,6 +2,19 @@
 
 All notable changes to the "lpc-remote-editor" extension will be documented in this file.
 
+## [0.1.0]
+
+### Added
+
+- Updated LPC Grammar
+- Added LPC Language features support:
+	- Document Outline support
+	- Proper symbol highlighting support
+	- Rename symbol support
+	- Reference lookup
+	- Syntax Error reporting Problems window
+
+
 ## [0.0.3]
 
 ### Added
