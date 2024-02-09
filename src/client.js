@@ -106,6 +106,10 @@ class RemoteEditorClient
 	{
 		return this.#protocol.rmdir(path, options);
 	}
+
+	async copy(oldPath, newPath, options) {
+		return this.#protocol.cp(oldPath, newPath, options);
+	}
 }
 
 module.exports = RemoteEditorClient;

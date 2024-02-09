@@ -18,10 +18,11 @@ class RemoteEditorFileSystem
 	 * Checks that a uri contains a valid path.  If not, throw an error
 	 * @param {Uri} uri 
 	 */
-	#validateUri(uri) {
+	#validateUri(uri)
+	{
 		const { path } = uri;
 
-		if(path.indexOf(" ") !== -1)
+		if (path.indexOf(" ") !== -1)
 			throw new Error("Filenames can not contain spaces.");
 	}
 
@@ -112,17 +113,24 @@ class RemoteEditorFileSystem
 	async delete(uri, options)
 	{
 		const fileInfo = await this.stat(uri);
-		if(fileInfo.type === FileType.File)
+		if (fileInfo.type === FileType.File)
 			return this.client.deleteFile(uri.path, options);
 		else
 			return this.client.deleteDirectory(uri.path, options);
 	}
-	
+
 	async rename(oldUri, newUri, options)
 	{
 		this.#validateUri(newUri);
-		//throw new Error('Method not implemented.');
-		return Promise.reject();
+
+		if (!await this.client.copy(oldUri.path, newUri.path, options))
+			throw new FileSystemError(`Failed to copy ${oldUri.path} to ${newUri.path}`);
+
+		if (!await this.client.deleteFile(oldUri.path))
+		{
+			await this.client.deleteDirectory(newUri.path);
+			throw new FileSystemError(`Failed to remove ${oldUri.path} during the rename.`);
+		}
 	}
 }
 

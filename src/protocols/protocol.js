@@ -1,5 +1,5 @@
 /**
- * 
+ * Abstraction of the commands used in Remote Editor
  */
 class RemoteEditorProtocol
 {
@@ -40,6 +40,8 @@ class RemoteEditorProtocol
 	mkdir(path, options) { return this.#commands.mkdir(this.#connectionOptions, path, options); }
 
 	rmdir(path, options) { return this.#commands.rmdir(this.#connectionOptions, path, options); }
+
+	cp(oldPath, newPath, options) { return this.#commands.cp(this.#connectionOptions, oldPath, newPath, options); }
 }
 
 module.exports = RemoteEditorProtocol;

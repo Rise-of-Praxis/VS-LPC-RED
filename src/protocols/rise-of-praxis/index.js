@@ -6,7 +6,8 @@ const who = require('./who');
 const rm = require('./rm');
 const mkdir = require('./mkdir');
 const rmdir = require('./rmdir');
+const cp = require('./cp');
 
 module.exports = {
-	ls, info, get, post, who, rm, mkdir, rmdir
+	ls, info, get, post, who, rm, mkdir, rmdir, cp
 };
