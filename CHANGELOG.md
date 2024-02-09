@@ -3,6 +3,12 @@
 All notable changes to the "lpc-remote-editor" extension will be documented in 
 this file.
 
+## [0.6.3]
+
+### Fixed
+
+- Issue where reading some files resulted in the file text being doubled
+
 ## [0.6.2]
 
 ### Fixed

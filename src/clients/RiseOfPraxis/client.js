@@ -505,11 +505,12 @@ class RiseOfPraxisClient extends RemoteEditorClient
         while (fileSize > 0)
         {
             // If we can fetch the whole file in one request, then do it without specifying the range
+            const shouldReadFileRange = rangeStart > 1 || fileSize > fetchSize;
             let requestMessage = `get ${path}`;
-            if (rangeStart > 1
-                || fileSize > fetchSize)
+            if (shouldReadFileRange)
             {
-                requestMessage += `#${rangeStart}-${rangeStart + fetchSize - 1}`;
+                const rangeEnd = rangeStart + fetchSize - 1;
+                requestMessage += `#${rangeStart}-${rangeEnd}`;
                 rangeStart += fetchSize;
             }
             requestMessage += "\n";
@@ -525,6 +526,11 @@ class RiseOfPraxisClient extends RemoteEditorClient
 
             const content = Buffer.from(response.content)
             chunks.push(content);
+
+            // Stop processing if we're pulling the whole file per request.
+            if (!shouldReadFileRange)
+                break;
+            
             fileSize -= content.length;
         }
 
