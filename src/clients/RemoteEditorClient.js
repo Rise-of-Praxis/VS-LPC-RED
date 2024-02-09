@@ -39,7 +39,7 @@ class RemoteEditorClient extends EventEmitter
 	 */
 	log(message)
 	{
-		const logMessage = `[${new Date().toISOString}] ${message}`;
+		const logMessage = `[${new Date().toISOString()}] ${message}`;
 		if (this.#outputChannel)
 			this.#outputChannel.appendLine(logMessage);
 
@@ -133,6 +133,13 @@ class RemoteEditorClient extends EventEmitter
 	 * @async
 	 */
 	async copy(oldPath, newPath, options) { throw new Error("Not implemented"); }
+
+	isReady() { return true; }
+
+	/**
+	 * Clean up resources used by the client
+	 */
+	dispose() { }
 }
 
 module.exports = {
