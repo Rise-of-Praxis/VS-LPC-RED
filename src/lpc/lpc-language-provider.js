@@ -126,7 +126,8 @@ class LPCLanguageProvider
 			|| !scope.symbolTable.has(identifier.name))
 			return undefined;
 
-		const range = scope.symbolTable.get(identifier.name).definitionRange;
+		const symbol = scope.symbolTable.get(identifier.name).symbol;
+		const range = symbol.range;
 
 		return new Location(document.uri, range);
 	}

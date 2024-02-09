@@ -1,6 +1,14 @@
 # Change Log
 
-All notable changes to the "lpc-remote-editor" extension will be documented in this file.
+All notable changes to the "lpc-remote-editor" extension will be documented in 
+this file.
+
+## [0.3.1]
+
+### Fixed
+
+- Fixed issue where functions that were declared prior to being defined did
+not work with "Find Definition" and "Find Occurences".
 
 ## [0.3.0]
 
