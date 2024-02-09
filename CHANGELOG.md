@@ -2,6 +2,17 @@
 
 All notable changes to the "lpc-remote-editor" extension will be documented in this file.
 
+## [0.2.0]
+
+### Added
+
+- Auto-save to local, if specified.  Under Workspace Settings > Lpc Remote Editor : Local Workspace
+
+### Fixed
+
+- Fixed various random issues caused by Promise not being returned by the Remote Editor File System Provider
+
+
 ## [0.1.0]
 
 ### Added
