@@ -3,6 +3,12 @@
 All notable changes to the "lpc-remote-editor" extension will be documented in 
 this file.
 
+## [0.4.1]
+
+### Fixed
+
+- Fixed issue where symbol rename failed on every other validation check.
+
 ## [0.4.0]
 
 ### Fixed
