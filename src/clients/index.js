@@ -1,38 +1,38 @@
 const { URL } = require("url");
-const { window, workspace } = require("vscode");
+const { window, workspace, StatusBarAlignment } = require("vscode");
 const { getConfiguration } = require("../utilities/configuration");
 const { RemoteEditorClient } = require("./RemoteEditorClient");
 const { RiseOfPraxisClient } = require("./RiseOfPraxis/client");
 
 const remoteEditorClients = {
-	"rise-of-praxis": RiseOfPraxisClient
+    "rise-of-praxis": RiseOfPraxisClient
 }
+
+const { ConnectError, RequestCancelledError } = require('../clients/ClientErrors');
 
 /**
  * A singleton instance of the RemoteEditorClient
  * @type {RemoteEditorClient}
  */
-let clientInstance = null;
+let _clientInstance = null;
 
 function getRemoteEditorClient()
 {
-	{
-		if (clientInstance === null)
-			clientInstance = createRemoteEditorClient();
+    if (_clientInstance === null)
+        _clientInstance = createRemoteEditorClient();
 
-		return clientInstance;
-	}
+    return _clientInstance;
 }
 
 function closeRemoteEditorClient()
 {
-	{
-		if (clientInstance !== null)
-		{
-			clientInstance.dispose();
-			clientInstance = null;
-		}
-	}
+    {
+        if (_clientInstance !== null)
+        {
+            _clientInstance.dispose();
+            _clientInstance = null;
+        }
+    }
 }
 
 /**
@@ -42,38 +42,43 @@ function closeRemoteEditorClient()
  */
 function createRemoteEditorClient(options)
 {
-	{
-		const config = getConfiguration();
+    {
+        const config = getConfiguration();
 
-		const connectionOptions = options || {
-			uri: new URL(config.uri),
-			userName: config.userName,
-			password: config.password,
-		};
+        if (!config.uri)
+            return undefined;
 
-		if (!connectionOptions.userName || !connectionOptions.password)
-			return undefined;
+        const connectionOptions = options || {
+            ...config,
+            uri: new URL(config.uri),
+            userName: config.userName,
+            password: config.password
+        };
 
-		// Figure out which client type to use
-		const clientType = config.get("protocol");
-		const Client = remoteEditorClients[clientType];
-		if (!Client)
-			return undefined;
+        if (!connectionOptions.userName
+            || !connectionOptions.password)
+            return undefined;
 
-		// Create the client.  If the client is session based, call the connect method.
-		// Session-based clients are identified by having a connect method.
-		connectionOptions.outputChannel = config.connectionDebugging ? window.createOutputChannel('Remote Editor') : undefined;
-		const client = new Client(connectionOptions);
-		if (typeof (client.connect) === "function")
-			client.connect(connectionOptions);
+        // Figure out which client type to use
+        const clientType = config.get("protocol");
+        const Client = remoteEditorClients[clientType];
+        if (!Client)
+            return undefined;
 
-		return client;
-	}
+        // Create the client.  If the client is session based, call the connect method.
+        // Session-based clients are identified by having a connect method.
+        connectionOptions.outputChannel = config.connectionDebugging ? window.createOutputChannel('Remote Editor') : undefined;
+        const client = new Client(connectionOptions);
+        if (typeof (client.connect) === "function")
+            client.connect(connectionOptions);
+
+        return client;
+    }
 }
 
 module.exports = {
-	RemoteEditorClient,
-	getRemoteEditorClient,
-	createRemoteEditorClient,
-	closeRemoteEditorClient
+    RemoteEditorClient,
+    getRemoteEditorClient,
+    createRemoteEditorClient,
+    closeRemoteEditorClient
 }

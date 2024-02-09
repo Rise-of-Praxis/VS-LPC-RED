@@ -1,21 +1,30 @@
-const { commands, languages, workspace, Disposable, window } = require("vscode");
-const extensionCommands = require('./extension-commands');
+const { commands, languages, workspace, Disposable, window, ViewColumn } = require("vscode");
 const { LPCLanguageProvider } = require("./lpc");
 const { getConfiguration } = require("./utilities/configuration");
-const { closeRemoteEditorClient } = require("./clients");
+const { closeRemoteEditorClient, getRemoteEditorClient } = require("./clients");
+const { getSearchViewProvider } = require("./search/mud-search-view-provider");
+const { extensionId } = require("./constants");
+const { enableAutoSave, getFileSystem } = require("./file-system");
+const extensionCommands = require('./extension-commands');
+const codeActions = require("./lpc/lpc-actions");
 
-const extensionIdPattern = /^([^.]+)\.(.+)$/i;
 
-function getExtensionId(extensionId)
+async function registerLanguageFeatures(context)
 {
-	const matches = extensionIdPattern.exec(extensionId);
-	if (!matches)
-		return undefined;
+    const config = {
+        ...getConfiguration()
+    }
+    const languageProvider = new LPCLanguageProvider();
+    languageProvider.register(context, config);
+}
 
-	return {
-		publisher: matches[1],
-		id: matches[2]
-	};
+async function registerFileSystem(context)
+{ 
+    const fileSystem = getFileSystem();
+    const fileSystemProvider = workspace.registerFileSystemProvider(fileSystem.scheme, fileSystem, { isCaseSensitive: true })
+    context.subscriptions.push(fileSystemProvider);
+
+    enableAutoSave();
 }
 
 /**
@@ -24,24 +33,39 @@ function getExtensionId(extensionId)
  */
 function activate(context)
 {
-	const extensionId = getExtensionId(context.extension.id);
+    console.log("Activating LPC Remote Editor...");
 
-	console.log("Activating LPC Remote Editor...");
+    const client = getRemoteEditorClient();
+    if (!client)
+        return;
 
-	Object.keys(extensionCommands).forEach((name) =>
-	{
-		const commandHandler = extensionCommands[name];
-		const fullCommandName = `${extensionId.id}.${name}`;
+    extensionCommands.forEach((command) =>
+    {
+        const { id, command: commandHandler } = command;
+		const fullCommandName = `${extensionId}.${id}`;
 		console.log(`Registering Extension Command '${fullCommandName}'`)
-		const command = commands.registerCommand(fullCommandName, (...args) => commandHandler(context, ...args));
-		context.subscriptions.push(command);
-	});
+		context.subscriptions.push(commands.registerCommand(fullCommandName, (...args) => commandHandler(context, ...args)));
+    });
+    
+    codeActions.forEach((actionProvider) =>
+    {
+        if (typeof (actionProvider.registerCommands) !== "function")
+            return;
+       
+        console.log(`Registering commands associated with '${actionProvider.actionId}' action`);
+        actionProvider.registerCommands(context);
+    });
 
-	commands.executeCommand("lpc-remote-editor.registerFileSystem", context);
+    context.subscriptions.push(client);
 
-	const config = getConfiguration();
-	if(config.enableLanguageFeatures)
-		commands.executeCommand('lpc-remote-editor.registerLanguageFeatures', context, config);
+    registerFileSystem(context);
+    registerLanguageFeatures(context);
+
+    const searchViewProvider = getSearchViewProvider(context);
+
+    context.subscriptions.push(
+        window.registerWebviewViewProvider(searchViewProvider.viewId, searchViewProvider)
+    );
 }
 
 // this method is called when your extension is deactivated
@@ -52,6 +76,6 @@ function deactivate()
 
 module.exports = {
 	activate,
-	deactivate
+    deactivate
 }
 
