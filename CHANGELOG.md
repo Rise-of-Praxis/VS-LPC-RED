@@ -3,6 +3,15 @@
 All notable changes to the "lpc-remote-editor" extension will be documented in 
 this file.
 
+## [0.6.2]
+
+### Fixed
+
+- Connection not properly closing due to VS Code shutting down before cleanup
+  can complete.
+- Searching while another search is performing didn't properly cancel the
+  previous search.
+
 ## [0.6.1]
 
 ### Fixed

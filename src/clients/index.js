@@ -24,12 +24,12 @@ function getRemoteEditorClient()
     return _clientInstance;
 }
 
-function closeRemoteEditorClient()
+async function closeRemoteEditorClient()
 {
     {
         if (_clientInstance !== null)
         {
-            _clientInstance.dispose();
+            await _clientInstance.dispose();
             _clientInstance = null;
         }
     }

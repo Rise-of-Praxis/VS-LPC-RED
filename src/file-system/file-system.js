@@ -650,7 +650,7 @@ class RemoteEditorFileSystem
             {
                 const matched = await this.#doesMatchSearch(file, searchOptions);
                 for (const match of matched)
-                {
+                {   
                     results.push(match);
 
                     if (typeof (searchOptions.onMatchFound) === "function")
