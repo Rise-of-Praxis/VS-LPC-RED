@@ -162,15 +162,11 @@ module.exports = async (context) =>
 	const { uri, userName } = connectionOptions;
 	window.setStatusBarMessage(`Attempting to connect to ${uri} as ${userName}...`);
 
-	try
+	const client = createRemoteEditorClient(connectionOptions);
+
+	client.once('connected', async (who) =>
 	{
-		const client = await createRemoteEditorClient(connectionOptions);
-
-		const result = await client.who();
-		if (!result)
-			throw Error(`Authentication failed for ${userName}`);
-
-		const { mudName, name } = result;
+		const { mudName, name } = who;
 
 		window.setStatusBarMessage(`Connected to ${uri} as ${userName}`, 1000);
 
@@ -188,10 +184,12 @@ module.exports = async (context) =>
 		}
 
 		// Start the remote editor
-		await commands.executeCommand('vscode.openFolder', workspaceUri);
-	}
-	catch (error)
+		commands.executeCommand('vscode.openFolder', workspaceUri);
+		client.dispose();
+	});
+
+	client.once('error', () =>
 	{
-		window.showErrorMessage(`Failed to connect to ${uri}: ${error}`);
-	}
+		window.showErrorMessage(`Authentication failed for ${userName}`);
+	});
 }

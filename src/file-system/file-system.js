@@ -1,4 +1,5 @@
 const { EventEmitter, Uri, FileSystemError, Disposable, FileType, FileChangeType } = require('vscode');
+const { TimeoutError } = require('../clients/ClientErrors');
 const { RemoteEditorClient } = require('../clients/RemoteEditorClient');
 
 const watchTimeoutMS = 2500;
@@ -8,10 +9,17 @@ class RemoteEditorFileSystem
 	constructor(client)
 	{
 		this.#client = client;
+		this.#watchForClientConnection();
 	}
 
 	/** @type {RemoteEditorClient} */
 	#client;
+
+	/** @type {Promise} */
+	#clientAvailablePromise;
+
+	/** @type {Function} */
+	#onClientConnectedHandler;
 
 	/** @type {RemoteEditorClient} */
 	get client() { return this.#client; }
@@ -47,6 +55,27 @@ class RemoteEditorFileSystem
 			throw new Error("Filenames can not contain spaces.");
 	}
 
+	#watchForClientConnection()
+	{
+		this.#clientAvailablePromise = new Promise((resolve, reject) =>
+		{
+			const waitTimeout = setTimeout(() => {
+				reject(new TimeoutError("Waiting for client to connect has timed out."));
+			}, 10000);
+
+			this.#client.once('connected', (obj) =>
+			{
+				clearTimeout(waitTimeout);
+				return resolve();
+			});
+
+			this.#client.once('disconnected', () =>
+			{
+				clearTimeout(waitTimeout);
+				this.#watchForClientConnection();
+			});
+		});
+	}
 	/**
 	 * @type {EventEmitter}
 	 */
@@ -128,6 +157,15 @@ class RemoteEditorFileSystem
 	}
 
 	/**
+	 * Waits for the client to be available for use.
+	 * @returns {Promise}
+	 */
+	#waitForAvailableClient()
+	{
+		return this.#clientAvailablePromise;
+	}
+
+	/**
 	 * Gets information about about a single file
 	 *  
 	 * @param {Uri} uri The path of the file to return
@@ -135,6 +173,7 @@ class RemoteEditorFileSystem
 	 */
 	async stat(uri)
 	{
+		await this.#waitForAvailableClient();
 		return this.client.getFileInfo(uri.path);
 	}
 
@@ -147,6 +186,7 @@ class RemoteEditorFileSystem
 	 */
 	async readDirectory(uri)
 	{
+		await this.#waitForAvailableClient();
 		const results = await this.client.readDirectory(uri.path);
 		if (!results)
 			throw FileSystemError.FileNotFound(uri);
@@ -164,6 +204,7 @@ class RemoteEditorFileSystem
 	async createDirectory(uri)
 	{
 		this.#validateUri(uri);
+		await this.#waitForAvailableClient();
 		return this.client.createDirectory(uri.path);
 	}
 
@@ -176,6 +217,7 @@ class RemoteEditorFileSystem
 	 */
 	async readFile(uri)
 	{
+		await this.#waitForAvailableClient();
 		const data = await this.client.readFile(uri.path);
 		if (!data)
 			throw FileSystemError.FileNotFound(uri);
@@ -193,6 +235,7 @@ class RemoteEditorFileSystem
 	async writeFile(uri, content, options)
 	{
 		this.#validateUri(uri);
+		await this.#waitForAvailableClient();
 		return this.client.writeFile(uri.path, content, options);
 	}
 
@@ -205,6 +248,8 @@ class RemoteEditorFileSystem
 	 */
 	async delete(uri, options)
 	{
+		await this.#waitForAvailableClient();
+
 		const fileInfo = await this.stat(uri);
 		if (fileInfo.type === FileType.File)
 			return this.client.deleteFile(uri.path, options);
@@ -215,6 +260,7 @@ class RemoteEditorFileSystem
 	async rename(oldUri, newUri, options)
 	{
 		this.#validateUri(newUri);
+		await this.#waitForAvailableClient();
 
 		if (!await this.client.copy(oldUri.path, newUri.path, options))
 			throw new FileSystemError(`Failed to copy ${oldUri.path} to ${newUri.path}`);

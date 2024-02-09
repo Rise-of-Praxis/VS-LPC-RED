@@ -1,4 +1,4 @@
-const { commands, languages, workspace, Disposable } = require("vscode");
+const { commands, languages, workspace, Disposable, window } = require("vscode");
 const extensionCommands = require('./extension-commands');
 const { LPCLanguageProvider, subscribeToDocumentChanges } = require("./lpc-lang");
 const { getConfiguration } = require("./utilities/configuration");
@@ -21,7 +21,7 @@ function getExtensionId(extensionId)
  * The Remote Editor 
  * @param {import("vscode").ExtensionContext} context 
  */
- function activate(context)
+function activate(context)
 {
 	const extensionId = getExtensionId(context.extension.id);
 

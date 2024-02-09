@@ -1,10 +1,13 @@
-const { workspace, window, ExtensionContext, Uri } = require('vscode');
+const vscode = require('vscode');
+const { workspace, window, ExtensionContext, Uri, commands, StatusBarAlignment } = require('vscode');
 const { FileSystem } = require("../file-system");
 const { existsSync, mkdirSync } = require('fs');
 const { dirname } = require('path');
 const { getConfiguration } = require('../utilities/configuration');
 const { LanguageId } = require("../lpc-lang");
 const { createRemoteEditorClient } = require('../clients');
+const { ConnectError, RequestCancelledError } = require('../clients/ClientErrors');
+const clients = require('../clients');
 
 function getLocalWorkspacePath()
 {
@@ -62,8 +65,7 @@ function enableAutoSave()
 	});
 }
 
-
-let registeredFileSystem = false;
+let client = null;
 
 /**
  * 
@@ -71,24 +73,86 @@ let registeredFileSystem = false;
  */
 module.exports = async (context) =>
 {
-	if (registeredFileSystem)
+	let reconnectAttempts = 0;
+
+	if (client)
 		return;
 
-	const client = await createRemoteEditorClient();
-	client.on('disconnected', () =>
+	try
 	{
-		registeredFileSystem = false;
-		fileSystemProvider.dispose();
+		client = createRemoteEditorClient();
+		const statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 1);
+		statusBarItem.name = "LPC Remote Editor";
+		statusBarItem.show();
 
-		const messageOptions = { modal: true, detail: 'The connection to the MUD was dropped.  You need to reload the workspace to reconnect.' };
-		window.showErrorMessage('Mud connection was dropped.', messageOptions);
-	});
+		/**
+		 * 
+		 * @param {object} settings 
+		 * @param {string} settings.message
+		 * @param {string} [settings.tooltip]
+		 * @param {string} settings.icon
+		 */
+		function setStatusBarItem({ message, tooltip, icon })
+		{
+			statusBarItem.text = `$(${icon}) ${statusBarItem.name}: ${message}`;
+			statusBarItem.tooltip = tooltip;
+		}
 
-	const fileSystem = new FileSystem(client);
-	const fileSystemProvider = workspace.registerFileSystemProvider(fileSystem.scheme, fileSystem, { isCaseSensitive: true })
-	context.subscriptions.push(fileSystemProvider);
-	registeredFileSystem = true;
+		/**
+		 * Attempts to reconnect to the mud
+		 * @returns Promise
+		 * @async
+		 */
+		async function attemptReconnect()
+		{
 
-	enableAutoSave();
+			reconnectAttempts++;
+
+			if (reconnectAttempts > 3)
+			{
+				setStatusBarItem({ message: 'Failed to connect', icon: 'error' });
+				return;
+			}
+
+			setStatusBarItem({ message: `Attempt ${reconnectAttempts} to reconnect...`, icon: 'warning' });
+			return client.connect();
+		}
+
+		client.on('connected', (who) =>
+		{
+			reconnectAttempts = 0;
+			setStatusBarItem({ message: `Connected to ${who.mudName}`, tooltip: `Successfully connected ${who.name} to ${who.mudName}`, icon: 'vm-active' });
+
+			if (window.activeTextEditor)
+				window.showTextDocument(window.activeTextEditor.document);
+		});
+
+		client.on('disconnected', () =>
+		{
+			// Try to reconnect, but don't wait for it.
+			attemptReconnect();
+		});
+
+		client.on('error', (error) =>
+		{
+			if (error instanceof RequestCancelledError)
+				return;
+
+			if (error instanceof ConnectError)
+				window.showErrorMessage("Remote Editor connection error occurred.");
+		});
+
+		const fileSystem = new FileSystem(client);
+		const fileSystemProvider = workspace.registerFileSystemProvider(fileSystem.scheme, fileSystem, { isCaseSensitive: true })
+		context.subscriptions.push(client);
+		context.subscriptions.push(fileSystemProvider);
+
+		enableAutoSave();
+	} catch (err)
+	{
+		window.showErrorMessage(`Failed to connect the Remote Editor Client.\n${err}`);
+		return;
+	}
+
 }
 

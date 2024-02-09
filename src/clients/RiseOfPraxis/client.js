@@ -3,10 +3,16 @@ const { URL } = require("url");
 const { FileSystemError } = require("vscode");
 const parseFileListing = require("./parse-file-listing");
 const { RemoteEditorClient } = require("../RemoteEditorClient");
+const { TimeoutError, ConnectError, RequestCancelledError } = require("../ClientErrors");
 
 const loginResponsePattern = /^Connection to (.+)./i;
 const serverResponsePattern = /^(\d{3}) (.+?)\n(.*)$/si;
 const messageContentPattern = /^\((\d+)\) (.*)$/si;
+
+/**
+ * Time in milliseconds a request is allowed to complete
+ */
+const requestTimeoutTime = 5000;
 
 /**
  * @typedef {object} RemoteEditorResponse
@@ -31,6 +37,11 @@ class RiseOfPraxisClient extends RemoteEditorClient
 	 * @type {Socket}
 	 */
 	#connection;
+
+	/**
+	 * The connection options
+	 */
+	#connectionOptions;
 
 	/**
 	 * The collection of requests that are to be executed, in order.  This is done
@@ -69,14 +80,19 @@ class RiseOfPraxisClient extends RemoteEditorClient
 	 */
 	async connect(options)
 	{
-		const { uri, userName, password } = options;
+		if (options)
+			this.#connectionOptions = options;
+		else if (!this.#connectionOptions)
+			throw new Error('No connection options were provided');
+
+		const { uri, userName, password } = this.#connectionOptions;
 		const host = uri.hostname;
 		const port = parseInt(uri.port);
 
 		return new Promise((resolve, reject) =>
 		{
 			// Create the connection
-			const connection = createConnection({ host, port }, async () =>
+			const connection = createConnection({ host, port }, async (err) =>
 			{
 				// Remove the connect error listener
 				connection.removeAllListeners("error");
@@ -85,22 +101,28 @@ class RiseOfPraxisClient extends RemoteEditorClient
 				this.#connection = connection;
 
 				this.#who = await this.#handshake(userName, password);
+				this.emit('connected', this.#who);
 
 				return resolve(this.#who);
 			});
 
 			connection.once('error', (error) =>
 			{
-				return reject(error);
+				return reject(new ConnectError(error.toString()));
+			});
+
+			connection.once('timeout', () =>
+			{
+				return reject(new ConnectError('Establishing connection timed out.'));
 			});
 
 			// Listen for if this connection disconnects from the remote end
-			connection.on('end', () =>
+			connection.once('end', () =>
 			{
+				connection.removeAllListeners();
+				this.dispose();
 				this.emit('disconnected');
 			});
-
-
 		});
 	}
 
@@ -121,18 +143,28 @@ class RiseOfPraxisClient extends RemoteEditorClient
 		let buffer = '';
 		const connection = this.#connection;
 
+		const timeoutHandle = setTimeout(() =>
+		{
+			this.emit('timeout');
+			handleError(new TimeoutError(`Request failed to complete with alotted time (${requestTimeoutTime / 1000}s).`));
+		}, requestTimeoutTime);
+
 		// Called when the request completed, regardless of failure or success
 		const complete = (response) =>
 		{
+			clearTimeout(timeoutHandle);
+
 			// Remove all the listeners
 			connection.off('data', handleServerResponse);
 			connection.off('error', handleError);
-			connection.off('timeout', handleTimeout);
 
 			// Move onto the next request
 			this.pendingRequests.shift()
 			if (this.pendingRequests.length)
 				setTimeout(() => this.#processNextRequest());
+
+			if (response instanceof Error)
+				this.emit('error', response);
 
 			if (callback)
 				callback(response);
@@ -141,13 +173,10 @@ class RiseOfPraxisClient extends RemoteEditorClient
 		// Called when there was an error with the request
 		const handleError = (error) => 
 		{
-			complete(new Error(error));
-		}
-
-		// Called when the response from the server timed out
-		const handleTimeout = () =>
-		{
-			handleError("Remote Editor response timed out")
+			if (error instanceof Error)
+				complete(error);
+			else
+				complete(new Error(error));
 		}
 
 		// Callback function that handles the server response
@@ -178,7 +207,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
 
 		connection.on('data', handleServerResponse);
 		connection.on('error', handleError);
-		connection.on('timeout', handleTimeout);
+
 		connection.write(message);
 	}
 
@@ -198,13 +227,12 @@ class RiseOfPraxisClient extends RemoteEditorClient
 			this.#pushRequest(message, content, (response) =>
 			{
 				if (response instanceof Error)
-					reject(response);
+					return reject(response);
 
 				resolve(response);
 			});
 		});
 	}
-
 
 	/**
 	 * Uploads a file to the server once it's been put in Posting state
@@ -289,14 +317,12 @@ class RiseOfPraxisClient extends RemoteEditorClient
 				return { name: userName, mudName: matches[1] };
 			}
 
-			this.log(`Authentication for ${userName} failed: ${response.statusCode} ${response.status}`);
-
-			return null;
+			throw new Error(`Authentication for ${userName} failed: ${response.statusCode} ${response.status}`);
 		}
 		catch (error)
 		{
 			this.log(`Handshake failed: ${error}`);
-			return null;
+			throw error;
 		}
 	}
 
@@ -497,6 +523,24 @@ class RiseOfPraxisClient extends RemoteEditorClient
 			throw new FileSystemError(`Error copying ${oldPath} to ${newPath}: ${response.status}`);
 
 		return true;
+	}
+
+	dispose()
+	{
+		if (this.#connection)
+		{
+			this.#sendMessage("quit\n");
+			this.#connection.end();
+			this.#connection = null;
+		}
+		const pendingRequests = this.pendingRequests;
+		this.pendingRequests = [];
+
+		for (const { callback, message } of pendingRequests)
+		{
+			if (typeof (callback) == "function")
+				callback(new RequestCancelledError(message));
+		}
 	}
 }
 

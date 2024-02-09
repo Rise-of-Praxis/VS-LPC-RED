@@ -14,9 +14,9 @@ module.exports = {
 	/**
 	 * 
 	 * @param {object} [options] The options use to create the client
-	 * @returns {Promise<RemoteEditorClient>}
+	 * @returns {RemoteEditorClient}
 	 */
-	createRemoteEditorClient: async (options) =>
+	createRemoteEditorClient: (options) =>
 	{
 		const config = getConfiguration();
 
@@ -40,7 +40,7 @@ module.exports = {
 		connectionOptions.outputChannel = config.connectionDebugging ? window.createOutputChannel('Remote Editor') : undefined;
 		const client = new Client(connectionOptions);
 		if (typeof (client.connect) === "function")
-			await client.connect(connectionOptions);
+			client.connect(connectionOptions);
 
 		return client;
 	}
