@@ -434,15 +434,7 @@ var LPCListener = /*#__PURE__*/function (_antlr4$tree$ParseTre) {
 
   }, {
     key: "exitArrayEnd",
-    value: function exitArrayEnd(ctx) {} // Enter a parse tree produced by LPCParser#arrayElements.
-
-  }, {
-    key: "enterArrayElements",
-    value: function enterArrayElements(ctx) {} // Exit a parse tree produced by LPCParser#arrayElements.
-
-  }, {
-    key: "exitArrayElements",
-    value: function exitArrayElements(ctx) {} // Enter a parse tree produced by LPCParser#indexOperator.
+    value: function exitArrayEnd(ctx) {} // Enter a parse tree produced by LPCParser#indexOperator.
 
   }, {
     key: "enterIndexOperator",
@@ -482,7 +474,23 @@ var LPCListener = /*#__PURE__*/function (_antlr4$tree$ParseTre) {
 
   }, {
     key: "exitStatement",
-    value: function exitStatement(ctx) {} // Enter a parse tree produced by LPCParser#statementOrBlock.
+    value: function exitStatement(ctx) {} // Enter a parse tree produced by LPCParser#breakStatement.
+
+  }, {
+    key: "enterBreakStatement",
+    value: function enterBreakStatement(ctx) {} // Exit a parse tree produced by LPCParser#breakStatement.
+
+  }, {
+    key: "exitBreakStatement",
+    value: function exitBreakStatement(ctx) {} // Enter a parse tree produced by LPCParser#continueStatement.
+
+  }, {
+    key: "enterContinueStatement",
+    value: function enterContinueStatement(ctx) {} // Exit a parse tree produced by LPCParser#continueStatement.
+
+  }, {
+    key: "exitContinueStatement",
+    value: function exitContinueStatement(ctx) {} // Enter a parse tree produced by LPCParser#statementOrBlock.
 
   }, {
     key: "enterStatementOrBlock",
@@ -682,15 +690,7 @@ var LPCListener = /*#__PURE__*/function (_antlr4$tree$ParseTre) {
 
   }, {
     key: "exitSwitchStatement",
-    value: function exitSwitchStatement(ctx) {} // Enter a parse tree produced by LPCParser#caseStatements.
-
-  }, {
-    key: "enterCaseStatements",
-    value: function enterCaseStatements(ctx) {} // Exit a parse tree produced by LPCParser#caseStatements.
-
-  }, {
-    key: "exitCaseStatements",
-    value: function exitCaseStatements(ctx) {} // Enter a parse tree produced by LPCParser#caseLabel.
+    value: function exitSwitchStatement(ctx) {} // Enter a parse tree produced by LPCParser#caseLabel.
 
   }, {
     key: "enterCaseLabel",
