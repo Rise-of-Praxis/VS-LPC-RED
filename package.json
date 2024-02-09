@@ -3,6 +3,7 @@
 	"displayName": "Remote Editor for LP MUDs",
 	"description": "Enables creators on an LP MUD to remotely edit code through VS Code",
 	"preview": true,
+	"publisher": "rise-of-praxis",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.61.0"
@@ -10,13 +11,22 @@
 	"categories": [
 		"Other"
 	],
+	"repository": {
+		"url": "https://github.com/AdamM-AU/VS-LPC-RED.git"
+	},
 	"activationEvents": [
 		"onFileSystem:lpc-remote-ed"
 	],
+	"scripts": {
+		"build": "vsce package"
+	},
 	"main": "./src/extension.js",
 	"capabilities": {
 		"virtualWorkspaces": true
 	},
+	"extensionDependencies": [
+		"undeadfish.vscode-lpc-lang"
+	],
 	"devDependencies": {
 		"@types/glob": "^7.1.4",
 		"@types/mocha": "^9.0.0",
@@ -25,6 +35,7 @@
 		"@vscode/test-electron": "^1.6.2",
 		"eslint": "^7.32.0",
 		"glob": "^7.1.7",
-		"mocha": "^9.1.1"
+		"mocha": "^9.1.1",
+		"vsce": "^1.100.1"
 	}
 }
