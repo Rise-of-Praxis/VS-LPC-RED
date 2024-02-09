@@ -6,7 +6,7 @@ const { getRemoteEditorClient } = require("../clients");
 
 const LanguageId = "lpc";
 
-const validIdentifierRegEx = /^[a-zA-Z_][a-zA-Z0-9_]*$/gm;
+const validIdentifierRegEx = /^[a-zA-Z_][a-zA-Z0-9_]*$/m;
 
 class LPCLanguageProvider
 {
