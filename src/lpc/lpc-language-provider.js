@@ -186,8 +186,28 @@ class LPCLanguageProvider
 			const documentColumn = column;
 			const symbolRange = new Range(documentLine, documentColumn, documentLine, documentColumn);
 
-			return new Diagnostic(symbolRange, msg, DiagnosticSeverity.Error);
-		});
+			return new Diagnostic(symbolRange, `Syntax Error: ${msg}`, DiagnosticSeverity.Error);
+        });
+        
+        // TODO: Check to see if any variable symbols are declared, but not referenced
+        lpcDocument.identifiers.forEach((identifier) =>
+        {
+            // Get the scope this identifier is defined in
+            const { scope } = identifier;
+            if (!scope)
+                return;
+
+            // Get the symbol table entry for this identifier within its scope
+            const entry = scope.symbolTable.get(identifier.name);
+            const { symbol, occurrences } = entry;
+            if (symbol.kind === SymbolKind.Function
+                || symbol.isFunctionParameter)
+                return;
+
+            // See how many occurrences of this symbol exists.  If it's only 1, then add a warning
+            if (occurrences.length === 1)
+                diagnostics.push(new Diagnostic(symbol.range, `Unused local variable: ${identifier.name}`, DiagnosticSeverity.Warning))
+        });
 
 		diagnosticCollection.set(document.uri, diagnostics);
 	}

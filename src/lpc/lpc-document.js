@@ -71,8 +71,7 @@ class LPCDocument extends LPCListener
 		parser.addErrorListener(this);
 
 		parser.buildParseTrees = true;
-		const lpcProgram = this.#lpcProgram = parser.lpcProgram();
-		this.#lpcProgram = lpcProgram;
+		const lpcProgram = parser.lpcProgram();
 		this.#uri = uri;
 
 		this.#scopes = [];
@@ -85,16 +84,7 @@ class LPCDocument extends LPCListener
         const startTime = Date.now();
         walker.walk(this, lpcProgram);
         console.log(`Parsing ${uri} took ${Date.now() - startTime}ms.`);
-	}
-
-	/**
-	 * The root context to the document
-	 * @type {ParserRuleContext}
-	 */
-	get root() { return this.#lpcProgram; }
-
-	/** @type {ParserRuleContext} */
-	#lpcProgram = undefined;
+    }
 
 	/**
 	 * The URI of this file
@@ -119,7 +109,13 @@ class LPCDocument extends LPCListener
 	 * The complete list of all identifiers in the file
 	 * @type {ParserRuleContext[]}
 	 */
-	#identifiers = [];
+    #identifiers = [];
+    
+	/**
+	 * The complete list of all identifiers in the file
+	 * @type {ParserRuleContext[]}
+	 */
+    get identifiers() { return this.#identifiers; }
 
 	/**
 	 * A stack of contexts that represent the scope block while visiting the parse tree
@@ -137,7 +133,13 @@ class LPCDocument extends LPCListener
 	 * The scope representing the file's top-level symbols
 	 * @type {Scope}
 	 */
-	#rootScope = undefined;
+    #rootScope = undefined;
+
+    /**
+     * The root symbol table of the file
+     * @type {Map<string, SymbolTableEntry>}
+     */
+    get symbolTable() { return this.#rootScope != undefined ? this.#rootScope.symbolTable : undefined; }
 
 	/**
 	 * The list of objects this LPC program inherits from
@@ -496,8 +498,9 @@ class LPCDocument extends LPCListener
 	}
 
 	enterParameterDefinition(ctx)
-	{
-		this.addDocumentSymbol(ctx);
+    {
+        const symbol = this.addDocumentSymbol(ctx);
+        symbol.isFunctionParameter = true;
     }
 
 	enterFunctionDeclaration(ctx)
