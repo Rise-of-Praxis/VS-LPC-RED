@@ -1,13 +1,30 @@
-const { EventEmitter, Uri, FileSystemError, Disposable, FileType, workspace, ConfigurationTarget, window } = require('vscode');
+const { EventEmitter, Uri, FileSystemError, Disposable, FileType, FileChangeType } = require('vscode');
 const Directory = require('./directory');
 const File = require('./file');
 const createRemoteEditorClient = require('../client');
+const FileStat = require('./file-stat');
+
+const watchTimeoutMS = 2500;
 
 class RemoteEditorFileSystem
 {
+	constructor()
+	{
+	}
+
+	/*
+	 * The timeout that checks the status of files that are being watched.
+	 */
+	#watchTimeout;
+
 	/** @type {RemoteEditorClient} */
 	#client;
 
+	/** 
+	 * The files currently being warched
+	 * @type {Map} 
+	 */
+	watchedFiles = new Map();
 
 	/**
 	 * Creates a {@link File} or {@link Directory} for the file information provided
@@ -26,7 +43,8 @@ class RemoteEditorFileSystem
 			return new File(fileMeta);
 	}
 
-	#createDirectoryEntry(path, listing) {
+	#createDirectoryEntry(path, listing)
+	{
 		const directory = new Directory({ name: path });
 		const { entries } = directory;
 
@@ -72,16 +90,84 @@ class RemoteEditorFileSystem
 	 */
 	onFileChangeEmitter = new EventEmitter();
 
+	/**
+	 * @type 
+	 */
 	onDidChangeFile = this.onFileChangeEmitter.event;
-	watch(uri, options)
+
+	/**
+	 * 
+	 * @param {*} uri 
+	 * @param {*} options 
+	 * @returns {Disposable}
+	 */
+	async watch(uri, options)
 	{
-		return new Disposable(() => { });
+		let fileInfo = null;
+
+		// See if the file exists
+		try
+		{
+			fileInfo = await this.stat(uri);
+		}
+		catch (err)
+		{
+			if (err.code !== "FileNotFound")
+				throw err;
+
+			// The file does not exist
+		}
+		this.watchedFiles.set(uri.path, fileInfo);
+
+		// If we haven't started watching, start now
+		if (!this.#watchTimeout)
+			this.checkWatchedFiles();
+
+		return new Disposable(() =>
+		{
+			this.watchedFiles.delete(uri.path);
+		});
+	}
+
+	checkWatchedFiles()
+	{
+		this.watchedFiles.forEach(async (lastInfo, path) =>
+		{
+			const uri = this.#client.getFileUri(path);
+			let currentInfo;
+			try
+			{
+				currentInfo = await this.stat(uri);
+
+				if (!lastInfo)
+					// If we didn't have any information the last time, but now we do, it was created
+					this.onFileChangeEmitter.fire({ type: FileChangeType.Created, uri });
+				else if (currentInfo.mtime !== lastInfo.mtime)
+					// The file changed
+					this.onFileChangeEmitter.fire({ type: FileChangeType.Changed, uri });
+			}
+			catch (err)
+			{
+				if (err.code === "FileNotFound"
+					&& lastInfo)
+					// The file was deleted
+					this.onFileChangeEmitter.fire({ type: FileChangeType.Deleted, uri });
+			}
+
+			// Update the current stat
+			this.watchedFiles.set(path, currentInfo);
+		});
+
+		// If there are files to watch, then check in a bit
+		if (this.watchedFiles.size)
+			this.#watchTimeout = setTimeout(() => this.checkWatchedFiles(), watchTimeoutMS)
 	}
 
 	/**
 	 * Gets information about about a single file
 	 *  
 	 * @param {Uri} uri The path of the file to return
+	 * @returns {Promise<FileStat>}
 	 */
 	async stat(uri)
 	{
@@ -143,7 +229,7 @@ class RemoteEditorFileSystem
 	async writeFile(uri, content, options)
 	{
 		this.#validateUri(uri);
-		this.client.writeFile(uri.path, content, options);
+		return this.client.writeFile(uri.path, content, options);
 	}
 
 	/**
