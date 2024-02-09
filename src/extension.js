@@ -1,7 +1,4 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-const { commands, ExtensionContext, FileSystemError } = require('vscode');
-const { workspace } = require('vscode');
+const { commands, ExtensionContext, workspace, languages } = require('vscode');
 const extensionCommands = require('./extension-commands');
 
 const extensionIdPattern = /^([^.]+)\.(.+)$/i;
@@ -37,7 +34,7 @@ function activate(context)
 		context.subscriptions.push(command);
 	});
 
-	commands.executeCommand(`${extensionId.id}.startRemoteEditor`);
+	commands.executeCommand("lpc-remote-editor.registerFileSystem", context);
 }
 
 // this method is called when your extension is deactivated

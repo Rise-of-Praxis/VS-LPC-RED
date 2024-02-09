@@ -124,6 +124,9 @@ class RemoteEditorRequest extends EventEmitter
 	{
 		const { userName, password } = this.#connectionOptions;
 
+		if(!userName || !password)
+			return false;
+
 		try {
 			const response = await this.#write(`login ${userName} ${password}\n`);
 
