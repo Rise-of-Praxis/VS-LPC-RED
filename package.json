@@ -8,7 +8,7 @@
 		"content"
 	],
 	"publisher": "rise-of-praxis",
-	"version": "0.1.0",
+	"version": "0.1.0-rc2",
 	"engines": {
 		"vscode": "^1.61.0"
 	},
