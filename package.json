@@ -16,7 +16,7 @@
 		"Other"
 	],
 	"repository": {
-		"url": "https://github.com/AdamM-AU/VS-LPC-RED.git"
+		"url": "https://github.com/Rise-of-Praxis/VS-LPC-RED"
 	},
 	"activationEvents": [
 		"onFileSystem:lpc-remote-ed",
