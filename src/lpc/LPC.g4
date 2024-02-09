@@ -196,7 +196,7 @@
 	ElseIfPreprocessor	: '#elseif'
 						;
 
-	EndIfPreprocessor	: '#endif'
+	EndIfPreprocessor	: '#endif' ~[\r\n]*
 						;
 
 	/*
@@ -810,6 +810,7 @@
 	*/
 	mappingElement
 		:	mappingKey Colon mappingValue
+        |   comment+ mappingElement
 		;
 
 	/*
@@ -883,6 +884,7 @@
 		| 	continueStatement
 		|	returnStatement
 		|	comment
+        |   comment+ statement
 		|	SemiColon
 		;
 
@@ -907,6 +909,7 @@
 	statementOrBlock
 		:	statement
 		|	block
+        |   comment+ statementOrBlock
 		;
 
 	/*
@@ -1093,7 +1096,7 @@
 	* If-Else statement
 	*/
 	conditionalStatement
-		:   If conditionalExpression 
+		:   If conditionalExpression
 			statementOrBlock 
 			elseStatement?
 		;
@@ -1104,6 +1107,7 @@
 
 	elseStatement
 		:	Else statementOrBlock
+        |   comment+ Else statementOrBlock
 		;
 
 	/*
