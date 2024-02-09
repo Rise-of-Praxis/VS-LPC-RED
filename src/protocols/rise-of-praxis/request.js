@@ -9,10 +9,11 @@ const messageContentPattern = /^\((\d+)\) (.*)$/si;
 
 /**
  * @typedef {object} RemoteEditorResponse
+ * @property {string} mudName The name of the mud the client is connected to
  * @property {string} statusCode The server response code
  * @property {string } status The server response message
- * @property {number} size If the server sent content with the response, this is the size of the content
- * @property {string} content If the server sent content
+ * @property {number} [size] If the server sent content with the response, this is the size of the content
+ * @property {string} [content] If the server sent content
  */
 
 
@@ -122,19 +123,26 @@ class RemoteEditorRequest extends EventEmitter
 	async #handshake()
 	{
 		const { userName, password } = this.#connectionOptions;
-		const response = await this.#write(`login ${userName} ${password}\n`);
 
-		if (response.statusCode === "100")
-		{
-			const matches = loginResponsePattern.exec(response.status);
-			if (matches)
-				this.#mudName = matches[1];
-			return true;
+		try {
+			const response = await this.#write(`login ${userName} ${password}\n`);
+
+			if (response.statusCode === "100")
+			{
+				const matches = loginResponsePattern.exec(response.status);
+				if (matches)
+					this.#mudName = matches[1];
+				return true;
+			}
+
+			this.#log(`Authentication for ${userName} failed: ${response.statusCode} ${response.status}`);
+
+			return false;
 		}
-
-		this.#log(`Authentication for ${userName} failed: ${response.statusCode} ${response.status}`);
-
-		return false;
+		catch(error) {
+			this.#log(`Handshake failed: ${error}`);
+			return false;
+		}
 	}
 
 	/**
@@ -155,6 +163,8 @@ class RemoteEditorRequest extends EventEmitter
 			const handleServerResponse = (responseData) =>
 			{
 				buffer += responseData.toString();
+				if (!serverResponsePattern.test(buffer))
+					reject("Server sent invalid response");
 
 				// Process the completed buffer
 				const response = this.processResponse(buffer);
@@ -208,7 +218,7 @@ class RemoteEditorRequest extends EventEmitter
 				if (!await this.#handshake())
 				{
 					this.#log(`Remote Editor login failed`);
-					reject('Remote Editor login failed');
+					return reject('Remote Editor login failed');
 				}
 
 				try
