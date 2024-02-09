@@ -1,28 +1,31 @@
-const { LPCDocument } = require("./lpc-document");
+const { LPCFile } = require("./lpc-file");
 
 /**
- * A cache of already parsed documents
+ * A cache of already parsed files
  */
-const _documentsCache = new Map();
+const _cache = new Map();
 
 /**
  * Returns a parsed LPC file
  * @param {TextDocument} document The document to return the parsed LPC document for
- * @returns {LPCDocument}
+ * @returns {LPCFile}
  */
-function getParsedLpcDocument(document)
+function getLpcFile(document)
 {
-
     const path = document.uri.path;
-    if (!_documentsCache.has(path))
+    if (!_cache.has(path))
     {
-        const text = document.getText();
         const uri = document.uri;
+        const text = document.getText();
 
         try
         {
-            const lpcDocument = new LPCDocument(text, uri);
-            _documentsCache.set(path, lpcDocument);
+            let lpcFile;
+            if (uri.path.endsWith(".c")
+                || uri.path.endsWith(".h"))
+                lpcFile = new LPCFile({ uri, text });
+            
+            _cache.set(path, lpcFile);
         } catch (ex)
         {
             console.log(`Error getting parsed LPC document: ${ex}`);
@@ -30,7 +33,7 @@ function getParsedLpcDocument(document)
         }
     }
 
-    return _documentsCache.get(path);
+    return _cache.get(path);
 }
 
 /**
@@ -40,7 +43,7 @@ function getParsedLpcDocument(document)
 function onDocumentChanged(document)
 {
     const path = document.uri.path;
-    _documentsCache.delete(path);
+    _cache.delete(path);
 }
 
 /**
@@ -50,11 +53,11 @@ function onDocumentChanged(document)
 function onDocumentClosed(document)
 {
     const path = document.uri.path;
-    _documentsCache.delete(path);
+    _cache.delete(path);
 }
 
 module.exports = {
-    getParsedLpcDocument,
+    getLpcFile,
     onDocumentChanged,
     onDocumentClosed
 };

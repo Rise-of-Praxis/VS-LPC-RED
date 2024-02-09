@@ -1,116 +1,169 @@
 {
-	"name": "lpc-remote-editor",
-	"displayName": "Remote Editor for Rise of Praxis",
-	"description": "Enables creators on Rise of Praxis to remotely edit code through VS Code",
-	"preview": true,
-	"license": "MIT",
-	"files": [
-		"content"
-	],
-	"publisher": "rise-of-praxis",
-	"version": "0.5.0",
-	"engines": {
-		"vscode": "^1.84.2"
-	},
-	"categories": [
-		"Other"
-	],
-	"repository": {
-		"url": "https://github.com/Rise-of-Praxis/VS-LPC-RED"
-	},
-	"activationEvents": [
-		"onFileSystem:lpc-remote-ed",
-		"onLanguage:lpc"
-	],
-	"scripts": {
-		"build": "vsce package",
-		"build:grammar": "java -jar antlr-4.7.2-complete.jar -Dlanguage=JavaScript src/lpc/LPC.g4 -o src/lpc/.antlr && cp src/lpc/.antlr/*.js src/lpc/"
-	},
-	"main": "./src/extension.js",
-	"capabilities": {
-		"virtualWorkspaces": true
-	},
-	"extensionDependencies": [
-		"undeadfish.vscode-lpc-lang"
-	],
-	"contributes": {
-		"commands": [
-			{
-				"title": "Create new LPC Remote Editor workspace",
-				"category": "Remote Editor for LP MUDs",
-				"command": "lpc-remote-editor.createNewWorkspace"
-			},
-			{
-				"title": "Copy MUD Path",
-				"command": "lpc-remote-editor.copyMudPath"
-			}
-		],
-		"menus": {
-			"explorer/context": [
-				{
-					"when": "resourceLangId == lpc",
-					"command": "lpc-remote-editor.copyMudPath",
-					"group": "6_copypath"
-				}
-			],
-			"editor/title/context": [
-				{
-					"when": "resourceLangId == lpc",
-					"command": "lpc-remote-editor.copyMudPath",
-					"group": "1_cutcopypaste"
-				}
-			]
-		},
-		"configuration": {
-			"title": "LPC Remote Editor for LP MUDs",
-			"properties": {
-				"lpcRemoteEditor.connectionDebugging": {
-					"title": "Output Client Communication",
-					"type": "boolean",
-					"default": false,
-					"description": "Creates a 'Remote Editor' channel in the Output Window containing debugging information."
-				},
-				"lpcRemoteEditor.enableLanguageFeatures": {
-					"title": "Enable LPC Language Features",
-					"type": "boolean",
-					"default": true,
-					"description": "Enables LPC specific language features in VS Code, such as document outlines and refactoring support."
-				},
-				"lpcRemoteEditor.localWorkspace": {
-					"title": "Local workspace directory",
-					"type": "string",
-					"description": "If specified, the path to save local copies of modified files to."
-				},
-				"lpcRemoteEditor.protocol": {
-					"title": "Remote Editor protocol",
-					"type": "string",
-					"default": "rise-of-praxis",
-					"enum": [
-						"rise-of-praxis"
-					],
-					"enumDescriptions": [
-						"Protocol used by Rise of Praxis"
-					]
-				}
-			}
-		}
-	},
-	"devDependencies": {
-		"@babel/cli": "^7.15.7",
-		"@babel/core": "^7.23.5",
-		"@babel/plugin-transform-modules-commonjs": "^7.23.3",
-		"@babel/preset-env": "^7.15.8",
-		"@types/glob": "^7.1.4",
-		"@types/mocha": "^9.0.0",
-		"@types/node": "14.x",
-		"@types/vscode": "^1.61.0",
-		"@vscode/test-electron": "^1.6.2",
-		"eslint": "^7.32.0",
-		"glob": "^7.1.7",
-		"mocha": "^9.1.1",
-		"vsce": "^1.100.1"
-	},
-	"dependencies": {
-		"antlr4": "4.7.2"
-	}
+    "name": "lpc-remote-editor",
+    "displayName": "Remote Editor for Rise of Praxis",
+    "description": "Enables creators on Rise of Praxis to remotely edit code through VS Code",
+    "preview": true,
+    "license": "MIT",
+    "files": [
+        "content"
+    ],
+    "publisher": "rise-of-praxis",
+    "version": "0.6.0",
+    "engines": {
+        "vscode": "^1.84.2"
+    },
+    "categories": [
+        "Other"
+    ],
+    "repository": {
+        "url": "https://github.com/Rise-of-Praxis/VS-LPC-RED"
+    },
+    "activationEvents": [
+        "onFileSystem:lpc-remote-ed"
+    ],
+    "scripts": {
+        "build": "vsce package",
+        "build:grammar": "java -jar antlr-4.7.2-complete.jar -Dlanguage=JavaScript src/lpc/LPC.g4 -o src/lpc/.antlr && cp src/lpc/.antlr/*.js src/lpc/"
+    },
+    "main": "./src/extension.js",
+    "capabilities": {
+        "virtualWorkspaces": true
+    },
+    "extensionDependencies": [
+        "undeadfish.vscode-lpc-lang"
+    ],
+    "contributes": {
+        "commands": [
+            {
+                "title": "Create new LPC Remote Editor workspace",
+                "category": "Remote Editor for LP MUDs",
+                "command": "lpc-remote-editor.createNewWorkspace"
+            },
+            {
+                "title": "Copy MUD Path",
+                "command": "lpc-remote-editor.copyMudPath"
+            },
+            {
+                "title": "Scan files for deprecated LPC keywords...",
+                "category": "Remote Editor for LP MUDs",
+                "command": "lpc-remote-editor.findOutdatedFiles"
+            },
+            {
+                "title": "Clear search results",
+                "icon": "$(clear-all)",
+                "command": "lpc-remote-editor.clearSearch"
+            },
+            {
+                "title": "Cancel search",
+                "icon": "$(search-stop)",
+                "command": "lpc-remote-editor.cancelSearch"
+            },
+            {
+                "title": "Fix all issues",
+                "icon": "$(lightbulb-autofix)",
+                "command": "lpc-remote-editor.actions.fixAll"
+            }
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "when": "resourceLangId == lpc",
+                    "command": "lpc-remote-editor.copyMudPath",
+                    "group": "6_copypath"
+                }
+            ],
+            "editor/title/context": [
+                {
+                    "when": "resourceLangId == lpc",
+                    "command": "lpc-remote-editor.copyMudPath",
+                    "group": "1_cutcopypaste"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "lpc-remote-editor.clearSearch",
+                    "when": "view == lpc-remote-editor.mud-search",
+                    "group": "navigation"
+                },
+                {
+                    "command": "lpc-remote-editor.cancelSearch",
+                    "when": "view == lpc-remote-editor.mud-search && lpc-remote-editor.mud-search.searching == true",
+                    "group": "navigation"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "mud-features",
+                    "title": "MUD Features",
+                    "icon": "$(terminal)"
+                }
+            ]
+        },
+        "views": {
+            "mud-features": [
+                {
+                    "id": "lpc-remote-editor.mud-search",
+                    "name": "Find in Files",
+                    "icon": "$(terminal)",
+                    "type": "webview",
+                    "when": "config.lpcRemoteEditor.uri"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "LPC Remote Editor for LP MUDs",
+            "properties": {
+                "lpcRemoteEditor.connectionDebugging": {
+                    "title": "Output Client Communication",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Creates a 'Remote Editor' channel in the Output Window containing debugging information."
+                },
+                "lpcRemoteEditor.enableLanguageFeatures": {
+                    "title": "Enable LPC Language Features",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables LPC specific language features in VS Code, such as document outlines and refactoring support."
+                },
+                "lpcRemoteEditor.localWorkspace": {
+                    "title": "Local workspace directory",
+                    "type": "string",
+                    "description": "If specified, the path to save local copies of modified files to."
+                },
+                "lpcRemoteEditor.protocol": {
+                    "title": "Remote Editor protocol",
+                    "type": "string",
+                    "default": "rise-of-praxis",
+                    "enum": [
+                        "rise-of-praxis"
+                    ],
+                    "enumDescriptions": [
+                        "Protocol used by Rise of Praxis"
+                    ]
+                }
+            }
+        }
+    },
+    "devDependencies": {
+        "@babel/cli": "^7.15.7",
+        "@babel/core": "^7.23.5",
+        "@babel/plugin-transform-modules-commonjs": "^7.23.3",
+        "@babel/preset-env": "^7.15.8",
+        "@types/glob": "^7.1.4",
+        "@types/mocha": "^9.0.0",
+        "@types/node": "14.x",
+        "@types/vscode": "^1.61.0",
+        "@vscode/test-electron": "^1.6.2",
+        "eslint": "^7.32.0",
+        "glob": "^7.1.7",
+        "mocha": "^9.1.1",
+        "vsce": "^1.100.1"
+    },
+    "dependencies": {
+        "@vscode/codicons": "^0.0.35",
+        "antlr4": "4.7.2",
+        "micromatch": "^4.0.5"
+    }
 }

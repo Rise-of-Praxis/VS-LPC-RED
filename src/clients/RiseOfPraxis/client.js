@@ -1,9 +1,11 @@
 const { Socket, createConnection } = require("net");
 const { URL } = require("url");
-const { FileSystemError, Uri } = require("vscode");
+const { FileSystemError, Uri, FileType } = require("vscode");
 const parseFileListing = require("./parse-file-listing");
 const { RemoteEditorClient } = require("../RemoteEditorClient");
 const { TimeoutError, ConnectError, RequestCancelledError } = require("../ClientErrors");
+const { isMatch: globMatch } = require("micromatch");
+const { FileInfo } = require("../../file-system/file-info");
 
 const loginResponsePattern = /^Connection to (.+)./i;
 const serverResponsePattern = /^(\d{3}) (.+?)\n(.*)$/si;
@@ -14,8 +16,10 @@ const messageContentPattern = /^\((\d+)\) (.*)$/si;
  * @property {URL} uri The connection URI
  * @property {string} userName The authentication user name
  * @property {string} password The authentication password
- * @property {number} [requestTimeout=5000] The amount of time, in ms, that a request has to timeout
- * @property {number} [fetchSize=10000] The number of bytes to fetch at a time when reading a file
+ * @property {number} [requestTimeout=2500] The amount of time, in ms, that a request has to timeout
+ * @property {number} [fetchSize=5000] The number of bytes to fetch at a time when reading a file
+ * @property {number} [uploadChunkSize=2000] The number of bytes to send when uploading a file
+ * @property {string[]} [ignorePaths]] A list of paths to ignore
  */
 
 /** @type {RiseOfPraxisConnectionOptions} */
@@ -23,8 +27,10 @@ const _connectionOptionsDefaults = {
     uri: undefined,
     userName: undefined,
     password: undefined,
-    requestTimeout: 5000,
-    fetchSize: 10000
+    requestTimeout: 2500,
+    fetchSize: 5000,
+    uploadChunkSize: 2000,
+    ignorePaths: ["**/.vscode/**", "**/.git/**"]
 }
 
 /**
@@ -47,7 +53,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
     constructor(options)
     {
         super(options);
-        this.#connectionOptions = { ..._connectionOptionsDefaults };
+        this.#connectionOptions = { ..._connectionOptionsDefaults, ...options };
     }
 
     /**
@@ -98,10 +104,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
     }
 
     /**
-     * Connects to Rise of Praxis' Remote Editor port
-     * @param {RiseOfPraxisConnectionOptions} options The options for connecting
-     * @returns {Promise}
-     * @async
+     * @inheritdoc
      */
     async connect(options)
     {
@@ -133,7 +136,9 @@ class RiseOfPraxisClient extends RemoteEditorClient
 
             connection.once('error', (error) =>
             {
-                return reject(new ConnectError(error.toString()));
+                const connectError = new ConnectError(error.toString());
+                this.emit('error', connectError);
+                return reject(connectError);
             });
 
             connection.once('timeout', () =>
@@ -144,6 +149,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
             // Listen for if this connection disconnects from the remote end
             connection.once('end', () =>
             {
+                this.#connection = null;
                 connection.removeAllListeners();
                 this.dispose();
                 this.emit('disconnected');
@@ -165,35 +171,28 @@ class RiseOfPraxisClient extends RemoteEditorClient
             return;
 
         const { message, content, callback } = this.pendingRequests[0];
-        let buffer = '';
+        let buffer = Buffer.alloc(0);
         const connection = this.#connection;
         const requestTimeout = this.requestTimeout;
 
-        const timeoutHandle = setTimeout(() =>
-        {
-            this.emit('timeout');
-            handleError(new TimeoutError(`Request failed to complete with alotted time (${requestTimeout / 1000}s).`));
-        }, requestTimeout);
+        let timeoutId;
 
         // Called when the request completed, regardless of failure or success
         const complete = (response) =>
         {
-            clearTimeout(timeoutHandle);
+            clearTimeout(timeoutId);
 
             // Remove all the listeners
             connection.off('data', handleServerResponse);
             connection.off('error', handleError);
 
-            // Move onto the next request
+            if (callback)
+                callback(response);
+
+            // Pop this off the requests and move to the next one
             this.pendingRequests.shift()
             if (this.pendingRequests.length)
                 setTimeout(() => this.#processNextRequest());
-
-            if (response instanceof Error)
-                this.emit('error', response);
-
-            if (callback)
-                callback(response);
         }
 
         // Called when there was an error with the request
@@ -205,15 +204,28 @@ class RiseOfPraxisClient extends RemoteEditorClient
                 complete(new Error(error));
         }
 
+        const timeoutHandler = () =>
+        {
+            this.emit('timeout');
+            handleError(new TimeoutError(`Request failed to complete within the alotted time (${requestTimeout / 1000}s).`));
+        }
+
+        const resetTimeout = () =>
+        {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(timeoutHandler, requestTimeout);
+        }
+
         // Callback function that handles the server response
         const handleServerResponse = async (responseData) =>
         {
-            buffer += responseData.toString("ascii");
-            if (!serverResponsePattern.test(buffer))
-                return handleError(`Server sent invalid response: ${buffer}`);
+            resetTimeout();
+            buffer = Buffer.concat([buffer, responseData]);
+            const text = buffer.toString();
 
-            // Process the completed buffer
-            let response = this.#processResponse(buffer);
+            if (!serverResponsePattern.test(text))
+                return handleError(`Server sent invalid response: ${text}`);
+            let response = this.#processResponse(text);
 
             // If the data returned is not valid, wait because there may be more data that 
             // is being streamed back
@@ -235,6 +247,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
         connection.on('error', handleError);
 
         connection.write(message);
+        resetTimeout();
     }
 
     /**
@@ -277,18 +290,20 @@ class RiseOfPraxisClient extends RemoteEditorClient
         {
             const size = content.length;
 
-            let responseBuffer = "";
-            const handleUploadResponse = (buffer) =>
+            let buffer = Buffer.alloc(0);
+            let text = "";
+            const handleUploadResponse = (data) =>
             {
-                responseBuffer += buffer.toString();
+                buffer = Buffer.concat([buffer, data]);
+                text = buffer.toString("ascii")
 
                 // Parse the response that's been put together so far
                 let uploadResponse;
-                while (uploadResponse = this.#processResponse(responseBuffer))
+                while (uploadResponse = this.#processResponse(text))
                 {
                     // There are possible multiple responses in the buffer, so the response content are the 
                     // other responses.
-                    responseBuffer = uploadResponse.content || '';
+                    text = uploadResponse.content || '';
 
                     // If the response code is 1xx, then there's more coming
                     if (uploadResponse.statusCode.startsWith("1"))
@@ -311,13 +326,13 @@ class RiseOfPraxisClient extends RemoteEditorClient
 
             // Send the data to the server, in chunks
             let remainingData = content.toString();
-            const chunkSize = 2014;
+            const chunkSize = this.#connectionOptions.uploadChunkSize;
             while (remainingData.length > 0)
             {
-                const chunk = remainingData.substr(0, chunkSize);
+                const chunk = remainingData.substring(0, chunkSize);
                 connection.write(chunk);
 
-                remainingData = remainingData.substr(chunkSize);
+                remainingData = remainingData.substring(chunkSize);
             }
         });
     };
@@ -355,9 +370,10 @@ class RiseOfPraxisClient extends RemoteEditorClient
     /**
      * 
      * @param {string} data The server response data
+     * @param {boolean} [skipResponseValidation=false] If true, this skips the validation step where the file size
      * @returns {RemoteEditorResponse}
      */
-    #processResponse(data)
+    #processResponse(data, skipResponseValidation = false)
     {
         if (!serverResponsePattern.test(data))
             return;
@@ -375,7 +391,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
             if (contentMatches)
             {
                 response.size = parseInt(contentMatches[1]);
-                response.content = contentMatches[2] || "";
+                response.content = (contentMatches[2] || "");
             }
             else
             {
@@ -383,7 +399,8 @@ class RiseOfPraxisClient extends RemoteEditorClient
                 response.size = messageContent.length;
             }
 
-            if (response.size > 0
+            if (!skipResponseValidation
+                && response.size > 0
                 && response.size !== response.content.length)
                 return;
         }
@@ -392,21 +409,19 @@ class RiseOfPraxisClient extends RemoteEditorClient
     }
 
     /**
-     * Reads the content of a directory
-     *
-     * @param {string} path The path to get the directory listing for
-     * @returns {Promise<import("vscode").FileStat[]>}
+     * @inheritdoc
      */
     async readDirectory(path)
     {
         const response = await this.#sendMessage(`ls ${path}\n`);
 
         const entries = [];
-        const listing = response.content.split('\n');
+        const content = response.content || "";
+        const listing = content.split('\n');
 
         for (const entry of listing)
         {
-            const fileInfo = parseFileListing(entry);
+            const fileInfo = parseFileListing(entry, this);
             if (!fileInfo)
                 continue;
 
@@ -417,9 +432,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
     }
 
     /** 
-     * Creates a new directory
-     * @returns {Promise}
-     * @async
+     * @inheritdoc
      */
     async createDirectory(path)
     {
@@ -431,9 +444,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
     }
 
     /**
-     * Get's information about the connection this client will be using
-     * 
-     * @returns {Promise<object>}
+     * @inheritdoc
      */
     async who()
     {
@@ -441,32 +452,25 @@ class RiseOfPraxisClient extends RemoteEditorClient
     }
 
     /**
-     * Gets information about a file or directory
-     * 
-     * @param {string} path The path to get the file information
-     * @returns {Promise<import("vscode").FileStat>}
+     * @inheritdoc
      */
     async getFileInfo(path)
     {
-        // TODO: Make this configurable
-        if (path.indexOf("/.vscode") !== -1)
+        // See if the path should be ignored
+        if (globMatch(path, this.#connectionOptions.ignorePaths))
             throw FileSystemError.FileNotFound(path);
 
         const response = await this.#sendMessage(`info ${path}\n`);
         if (response.statusCode === "404")
             throw FileSystemError.FileNotFound(path);
 
-        const fileInfo = parseFileListing(response.status);
-        fileInfo.uri = this.getFileUri(path);
+        const fileInfo = parseFileListing(response.status, this);
 
         return fileInfo;
     }
 
     /**
-     * Simple check to see if a path exists
-     * 
-     * @param {string} path The path to check
-     * @returns {Promise<boolean>}
+     * @inheritdoc
      */
     async pathExists(path)
     {
@@ -475,15 +479,12 @@ class RiseOfPraxisClient extends RemoteEditorClient
     }
 
     /**
-     * Reads a file
-     * 
-     * @param {string} path The path of the file to read 
-     * @returns {Promise<Buffer>} The file content
+     * @inheritdoc
      */
     async readFile(path)
     {
-        // TODO: Make this configurable
-        if (path.indexOf("/.vscode") !== -1)
+        // See if the path should be ignored
+        if (globMatch(path, this.#connectionOptions.ignorePaths))
             throw FileSystemError.FileNotFound(path);
 
         const fileInfo = await this.getFileInfo(path);
@@ -499,7 +500,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
             if (rangeStart > 1
                 || fileSize > fetchSize)
             {
-                requestMessage += `?range=${rangeStart}-${rangeStart + fetchSize - 1}`;
+                requestMessage += `#${rangeStart}-${rangeStart + fetchSize - 1}`;
                 rangeStart += fetchSize;
             }
             requestMessage += "\n";
@@ -527,31 +528,20 @@ class RiseOfPraxisClient extends RemoteEditorClient
     }
 
     /**
-     * Writes a file
-     * 
-     * @param {string} path The path of the file to be written to
-     * @param {Buffer} content The file content to write
-     * @param {object} options Options used for writing the file
-     * @returns {Promise}
-     * @async
+     * @inheritdoc
      */
     async writeFile(path, content, options)
     {
         // Let the server know we're sending a file
         const size = content ? content.length : 0;
-        const response = await this.#sendMessage(`post ${path} ${size}\n`, content);
+        const response = await this.#sendMessage(`post ${path} ${size}\n`, content.toString("ascii"));
 
         if (response.statusCode !== "200")
             throw new FileSystemError(response.status);
     }
 
     /**
-     * Deletes a file
-     * 
-     * @param {string} path The path of the file to delete
-     * @param {object} options Options used for deleting the file
-     * @returns {Promise}
-     * @async
+     * @inheritdoc
      */
     async deleteFile(path, options)
     {
@@ -565,10 +555,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
     }
 
     /**
-     * Deletes a directory
-     * 
-     * @param {string} path The path of the directory to delete
-     * @param {object} options Options used for deleting the directory
+     * @inheritdoc
      */
     async deleteDirectory(path, options)
     {
@@ -584,11 +571,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
     }
 
     /**
-     * Copies a file from one location to another location
-     * 
-     * @param {string} oldPath The path of the source file
-     * @param {string} newPath The path of the target file
-     * @param {object} options Options used for copying the file
+     * @inheritdoc
      */
     async copy(oldPath, newPath, options)
     {
@@ -600,11 +583,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
     }
 
     /**
-	 * Renames a file or directory from one location to another location
-	 * 
-	 * @param {string} oldPath The path of the source file/directory
-	 * @param {string} newPath The path of the target file/directory
-	 * @param {object} options Options used for copying the file/directory
+     * @inheritdoc
      */
     async rename(oldPath, newPath, options)
     {

@@ -3,6 +3,25 @@
 All notable changes to the "lpc-remote-editor" extension will be documented in 
 this file.
 
+## [0.6.0]
+
+### Added
+
+- Quick Fix actions for `array` and `static` keywords
+- Added 'Find Outdated Files' command
+- Added 'MUD Features' view container
+- Added 'Find in Files' view to 'MUD Features'
+
+### Updated
+
+- Updated unused variables to not track usage of `#define` (constants)
+- Updated LPC grammar to include `#error`
+- Update client configuration to support `ignorePaths`
+
+### Fixed
+
+- LPC parsing error when parsing function prototypes containing parameters with no name
+
 ## [0.5.0]
 
 ### Added

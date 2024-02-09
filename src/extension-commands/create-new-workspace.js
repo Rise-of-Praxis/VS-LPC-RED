@@ -146,50 +146,51 @@ async function saveWorkspace(folders, connectionOptions)
 	return workspaceUri;
 }
 
-/**
- * 
- * @param {ExtensionContext} context 
- */
-module.exports = async (context) =>
+
+module.exports =
 {
-	const connectionOptions = await getConnectionOptions(context);
-	if (!connectionOptions)
-	{
-		window.showWarningMessage(connectToMudCancelled);
-		return;
-	}
+    id: "createNewWorkspace",
+    command: async (context) =>
+    {
+        const connectionOptions = await getConnectionOptions(context);
+        if (!connectionOptions)
+        {
+            window.showWarningMessage(connectToMudCancelled);
+            return;
+        }
 
-	const { uri, userName } = connectionOptions;
-	window.setStatusBarMessage(`Attempting to connect to ${uri} as ${userName}...`);
+        const { uri, userName } = connectionOptions;
+        window.setStatusBarMessage(`Attempting to connect to ${uri} as ${userName}...`);
 
-	const client = createRemoteEditorClient(connectionOptions);
+        const client = createRemoteEditorClient(connectionOptions);
 
-	client.once('connected', async (who) =>
-	{
-		const { mudName, name } = who;
+        client.once('connected', async (who) =>
+        {
+            const { mudName, name } = who;
 
-		window.setStatusBarMessage(`Connected to ${uri} as ${userName}`, 1000);
+            window.setStatusBarMessage(`Connected to ${uri} as ${userName}`, 1000);
 
-		// Save the workspace setup
-		const realmDirectory = `/realms/${name}`;
-		const folders = [
-			{ uri: client.getFileUri('/').toString(), name: mudName },
-			{ uri: client.getFileUri(realmDirectory).toString(), name: `My Realm - ${realmDirectory}` }
-		];
-		const workspaceUri = await saveWorkspace(folders, connectionOptions);
-		if (!workspaceUri)
-		{
-			window.showWarningMessage(connectToMudCancelled);
-			return;
-		}
+            // Save the workspace setup
+            const realmDirectory = `/realms/${name}`;
+            const folders = [
+                { uri: client.getFileUri('/').toString(), name: mudName },
+                { uri: client.getFileUri(realmDirectory).toString(), name: `My Realm - ${realmDirectory}` }
+            ];
+            const workspaceUri = await saveWorkspace(folders, connectionOptions);
+            if (!workspaceUri)
+            {
+                window.showWarningMessage(connectToMudCancelled);
+                return;
+            }
 
-		// Start the remote editor
-		commands.executeCommand('vscode.openFolder', workspaceUri);
-		client.dispose();
-	});
+            // Start the remote editor
+            commands.executeCommand('vscode.openFolder', workspaceUri);
+            client.dispose();
+        });
 
-	client.once('error', () =>
-	{
-		window.showErrorMessage(`Authentication failed for ${userName}`);
-	});
+        client.once('error', () =>
+        {
+            window.showErrorMessage(`Authentication failed for ${userName}`);
+        });
+    }
 }
