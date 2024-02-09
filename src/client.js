@@ -91,7 +91,7 @@ class RemoteEditorClient
 	 */
 	async writeFile(path, content, options)
 	{
-		this.#protocol.post(path, content, options);
+		return this.#protocol.post(path, content, options);
 	}
 
 	/**
@@ -102,7 +102,7 @@ class RemoteEditorClient
 	 */
 	async deleteFile(path, options)
 	{
-		this.#protocol.rm(path, options);
+		return this.#protocol.rm(path, options);
 	}
 
 	/**
@@ -113,7 +113,7 @@ class RemoteEditorClient
 	 */
 	async deleteDirectory(path, options)
 	{
-		this.#protocol.rmdir(path, options);
+		return this.#protocol.rmdir(path, options);
 	}
 
 	/**
@@ -125,7 +125,7 @@ class RemoteEditorClient
 	 */
 	async copy(oldPath, newPath, options)
 	{
-		this.#protocol.cp(oldPath, newPath, options);
+		return this.#protocol.cp(oldPath, newPath, options);
 	}
 }
 
