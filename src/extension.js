@@ -40,7 +40,7 @@ function getExtensionId(extensionId)
 
 	const config = getConfiguration();
 	if(config.enableLanguageFeatures)
-		commands.executeCommand('lpc-remote-editor.registerLanguageFeatures', context);
+		commands.executeCommand('lpc-remote-editor.registerLanguageFeatures', context, config);
 }
 
 
