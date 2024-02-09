@@ -10,5 +10,8 @@ module.exports = async (connectionOptions, path) =>
 	else if (response.statusCode !== "200")
 		throw new FileSystemError(response.status);
 
+	if(!response.content)
+		return Buffer.from('');
+
 	return Buffer.from(response.content);
 }
