@@ -1,13 +1,12 @@
 const vscode = require('vscode');
-const { workspace, window, Uri, commands, StatusBarAlignment } = require('vscode');
+const { workspace, window, Uri, StatusBarAlignment } = require('vscode');
 const { FileSystem } = require("../file-system");
 const { existsSync, mkdirSync } = require('fs');
 const { dirname } = require('path');
 const { getConfiguration } = require('../utilities/configuration');
 const { LanguageId } = require("../lpc");
-const { createRemoteEditorClient } = require('../clients');
+const { getRemoteEditorClient } = require('../clients');
 const { ConnectError, RequestCancelledError } = require('../clients/ClientErrors');
-const clients = require('../clients');
 
 function getLocalWorkspacePath()
 {
@@ -80,7 +79,7 @@ module.exports = async (context) =>
 
 	try
 	{
-		client = createRemoteEditorClient();
+		client = getRemoteEditorClient();
 		const statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 1);
 		statusBarItem.name = "LPC Remote Editor";
 		statusBarItem.show();

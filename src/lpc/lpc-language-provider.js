@@ -1,18 +1,8 @@
 const { Position, DocumentHighlight, DiagnosticCollection, TextDocument, CancellationToken, DocumentSymbol, WorkspaceEdit, languages, Location, SymbolKind, Range, window, workspace, Diagnostic, DiagnosticSeverity } = require("vscode");
-const { LPCParser } = require('./LPCParser');
-const { LPCDocument } = require("./lpc-document");
 const { extname } = require("path");
+const documentCache = require("./lpc-document-cache");
+const { getRemoteEditorClient } = require("../clients");
 
-/**
- * A cache of already parsed documents
- */
-const cache = new Map();
-
-const scopeBlocks = [
-	LPCParser.RULE_lpcProgram
-	, LPCParser.RULE_block
-	, LPCParser.RULE_functionDeclaration
-];
 
 const LanguageId = "lpc";
 
@@ -20,35 +10,6 @@ const validIdentifierRegEx = /^[a-zA-Z_][a-zA-Z0-9_]*$/gm;
 
 class LPCLanguageProvider
 {
-	/**
-	 * Returns a parsed LPC file
-	 * @param {TextDocument} document 
-	 * @returns {LPCDocument}
-	 */
-	getParsedLpcDocument(document)
-	{
-
-		const path = document.uri.path;
-		if (!cache.has(path)
-			|| document.isDirty)
-		{
-			const text = document.getText();
-			const uri = document.uri;
-
-			try
-			{
-				const lpcDocument = new LPCDocument(text, uri);
-				cache.set(path, lpcDocument);
-			} catch (ex)
-			{
-				console.log(`Error getting parsed LPC document: ${ex}`);
-				return undefined;
-			}
-		}
-
-		return cache.get(path);
-	}
-
 	/**
 	 * Provides document symbol functionality
 	 * @param {TextDocument} document The document to extract the symbols for
@@ -58,7 +19,7 @@ class LPCLanguageProvider
 	async provideDocumentSymbols(document, cancellationToken)
 	{
 		// Get the compiled version of the file
-		const lpcDocument = this.getParsedLpcDocument(document);
+		const lpcDocument = documentCache.getParsedLpcDocument(document);
 		if (lpcDocument === undefined)
 			return [];
 
@@ -75,7 +36,7 @@ class LPCLanguageProvider
 	 */
 	async getSymbolOccurrences(document, position, cancellationToken)
 	{
-		const lpcDocument = this.getParsedLpcDocument(document);
+		const lpcDocument = documentCache.getParsedLpcDocument(document);
 		if (cancellationToken.isCancellationRequested)
 			return undefined;
 
@@ -112,7 +73,7 @@ class LPCLanguageProvider
 
 	provideDefinition(document, position, cancellationToken)
 	{
-		const lpcDocument = this.getParsedLpcDocument(document);
+		const lpcDocument = documentCache.getParsedLpcDocument(document);
 		if (cancellationToken.isCancellationRequested)
 			return undefined;
 
@@ -142,7 +103,7 @@ class LPCLanguageProvider
 	 */
 	async prepareRename(document, position, cancellationToken)
 	{
-		const lpcDocument = this.getParsedLpcDocument(document);
+		const lpcDocument = documentCache.getParsedLpcDocument(document);
 		if (cancellationToken.isCancellationRequested)
 			return undefined;
 
@@ -153,7 +114,7 @@ class LPCLanguageProvider
 		if (identifier.scope === undefined
 			|| !identifier.scope.symbolTable.has(identifier.name))
 			throw new Error("Only symbols defined in this file can be renamed.");
-		
+
 		return identifier.range;
 	}
 
@@ -205,9 +166,9 @@ class LPCLanguageProvider
 		if (document.languageId !== LanguageId)
 			return;
 
-		const program = this.getParsedLpcDocument(document);
+		const lpcDocument = documentCache.getParsedLpcDocument(document);
 
-		const diagnostics = program.syntaxErrors.map(({ line, column, msg }) =>
+		const diagnostics = lpcDocument.syntaxErrors.map(({ line, column, msg }) =>
 		{
 			const documentLine = line - 1;
 			const documentColumn = column;
@@ -241,7 +202,7 @@ class LPCLanguageProvider
 			workspace.onDidChangeTextDocument(e =>
 			{
 				const { document } = e;
-				cache.delete(document.uri.path);
+				documentCache.onDocumentChanged(document);
 				this.refreshDiagnostics(document, diagnosticCollection)
 			})
 		);
@@ -249,6 +210,54 @@ class LPCLanguageProvider
 		context.subscriptions.push(
 			workspace.onDidCloseTextDocument(doc => diagnosticCollection.delete(doc.uri))
 		);
+	}
+
+	/**
+	 * Provides links to other documents from within this document
+	 * @param {TextDocument} document The document to return the links for
+	 * @param {CancellationToken} cancellationToken The token that indicates if a request is cancelled
+	 */
+	provideDocumentLinks(document, cancellationToken)
+	{
+		const lpcDocument = documentCache.getParsedLpcDocument(document);
+		if (cancellationToken.isCancellationRequested)
+			return undefined;
+
+		return new Promise(async (resolve, reject) =>
+		{
+			const documentLinks = [];
+			documentLinks.push(...lpcDocument.includeFiles);
+			documentLinks.push(...lpcDocument.inheritance);
+
+			// Check which document links are actually valid
+			const client = getRemoteEditorClient();
+			const resolvedLinks = [];
+
+			for (const link of documentLinks)
+			{
+				const path = link.target.path;
+				const valid = await client.pathExists(path);
+
+				if (cancellationToken.isCancellationRequested)
+					return reject();
+
+				if (valid)
+				{
+					const fileInfo = await client.getFileInfo(path);
+					link.tooltip = fileInfo.path;
+					if(fileInfo.path !== path)
+						link.target = client.getFileUri(fileInfo.path);
+					resolvedLinks.push(link);
+				}
+			}
+
+			resolve(resolvedLinks);
+		});
+	}
+
+	resolveDocumentLinks(link, cancellationToken)
+	{
+		debugger;
 	}
 
 	/**
@@ -262,6 +271,7 @@ class LPCLanguageProvider
 		languages.registerRenameProvider(documentSelector, this);
 		languages.registerDefinitionProvider(documentSelector, this);
 		languages.registerReferenceProvider(documentSelector, this);
+		languages.registerDocumentLinkProvider(documentSelector, this);
 
 		// Subscript to document changes so things can be reloaded
 		const { lpcSyntaxDiagnostics } = config;

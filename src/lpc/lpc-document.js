@@ -2,7 +2,8 @@ const { InputStream, CommonTokenStream, tree } = require("antlr4");
 const { LPCParser } = require('./LPCParser');
 const { LPCLexer } = require("./LPCLexer");
 const { LPCListener } = require("./LPCListener");
-const { Uri, Range, Position, DocumentSymbol, SymbolKind } = require("vscode");
+const { Uri, Range, Position, DocumentSymbol, SymbolKind, DocumentLink, workspace } = require("vscode");
+const { getRemoteEditorClient, RemoteEditorClient } = require("../clients");
 
 /**
  * The list of parser rules that should be tracked as document symbols
@@ -74,10 +75,14 @@ class LPCDocument extends LPCListener
 		this.#lpcProgram = lpcProgram;
 		this.#uri = uri;
 
+		this.#scopes = [];
+
+		const client = getRemoteEditorClient();
+		this.#remoteEditorClient = client;
+
+		// Walk the parse tree.  This should be the absolute last step in the constructor
 		const walker = new tree.ParseTreeWalker()
 		walker.walk(this, lpcProgram);
-
-		this.#scopes = [];
 	}
 
 	/**
@@ -85,13 +90,17 @@ class LPCDocument extends LPCListener
 	 * @type {ParserRuleContext}
 	 */
 	get root() { return this.#lpcProgram; }
-	#lpcProgram;
+
+	/** @type {ParserRuleContext} */
+	#lpcProgram = undefined;
 
 	/**
 	 * The URI of this file
 	 * @type {Uri}
 	 */
 	get uri() { return this.#uri; }
+
+	/** @type {Uri} */
 	#uri;
 
 	/**
@@ -100,6 +109,8 @@ class LPCDocument extends LPCListener
 	 * @type {DocumentSymbol[]}
 	 */
 	get documentSymbols() { return this.#documentSymbols; }
+
+	/** @type {DocumentSymbol[]} */
 	#documentSymbols = [];
 
 	/**
@@ -127,6 +138,24 @@ class LPCDocument extends LPCListener
 	#rootScope = undefined;
 
 	/**
+	 * The list of objects this LPC program inherits from
+	 * @type {DocumentLink[]}
+	 */
+	get inheritance() { return this.#inheritance; }
+
+	/** @type {DocumentLink[]} */
+	#inheritance = [];
+
+	/**
+	 * The list of files that are referenced by the `#include` pre-processor
+	 * @type {DocumentLink[]}
+	 */
+	get includeFiles() { return this.#includeFiles; }
+
+	/** @type {DocumentLink[]} */
+	#includeFiles = [];
+
+	/**
 	 * The current scope being processed
 	 * @type {Scope}
 	 */
@@ -138,6 +167,12 @@ class LPCDocument extends LPCListener
 	 */
 	get syntaxErrors() { return this.#syntaxErrors; }
 	#syntaxErrors = [];
+
+	/** 
+	 * The active instance of the remote editor client
+	 * @type {RemoteEditorClient}
+	 */
+	#remoteEditorClient = null;
 
 	syntaxError(recognizer, offendingSymbol, line, column, msg, e)
 	{
@@ -298,7 +333,8 @@ class LPCDocument extends LPCListener
 	 */
 	addToSymbolTable(symbol)
 	{
-		const { symbolTable } = this.currentScope;
+		const scope = symbol.kind === SymbolKind.Function ? this.#rootScope : this.currentScope;
+		const { symbolTable } = scope;
 		symbolTable.set(symbol.name, { symbol, occurrences: [] });
 	}
 
@@ -464,6 +500,7 @@ class LPCDocument extends LPCListener
 
 	enterFunctionDeclaration(ctx)
 	{
+		this.#currentFunctionSymbol = undefined;
 		const symbol = this.addDocumentSymbol(ctx);
 		this.#currentFunctionSymbol = symbol;
 	}
@@ -534,6 +571,35 @@ class LPCDocument extends LPCListener
 	enterDefineConstantStatement(ctx)
 	{
 		this.addDocumentSymbol(ctx);
+	}
+
+	enterIncludeFileLiteral(ctx)
+	{
+		let path = ctx.getText();
+		let target = null;
+		const client = this.#remoteEditorClient;
+
+		if (path.startsWith("\""))
+			target = client.getFileUri(path.substring(1, path.length - 1), this.uri);
+		else
+			target = client.getFileUri(path);
+
+		const link = new DocumentLink(this.getContextRange(ctx), target);
+		this.#includeFiles.push(link);
+	}
+
+	enterInheritanceDeclaration(ctx)
+	{
+		let inheritsFrom = ctx.identifier();
+		if (inheritsFrom === undefined)
+			inheritsFrom = ctx.stringExpression();
+
+		if (inheritsFrom === undefined)
+			return;
+
+		const target = this.#remoteEditorClient.getFileUri(`\`${inheritsFrom.getText()} ".c"\``);
+		const link = new DocumentLink(this.getContextRange(inheritsFrom), target);
+		this.#inheritance.push(link);
 	}
 }
 

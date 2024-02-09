@@ -2,6 +2,7 @@ const { commands, languages, workspace, Disposable, window } = require("vscode")
 const extensionCommands = require('./extension-commands');
 const { LPCLanguageProvider } = require("./lpc");
 const { getConfiguration } = require("./utilities/configuration");
+const { closeRemoteEditorClient } = require("./clients");
 
 const extensionIdPattern = /^([^.]+)\.(.+)$/i;
 
@@ -44,7 +45,9 @@ function activate(context)
 }
 
 // this method is called when your extension is deactivated
-function deactivate() { 
+function deactivate()
+{ 
+	closeRemoteEditorClient();
 }
 
 module.exports = {
