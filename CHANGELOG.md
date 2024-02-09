@@ -2,16 +2,38 @@
 
 All notable changes to the "lpc-remote-editor" extension will be documented in this file.
 
+## [0.3.0]
+
+### Added
+
+- Added preprocessor constants (i.e.: `#define`) to the symbols listing
+
+### Updated
+
+- LPC Grammar to support preprocessor directives
+- Symbols in Symbol browser are now properly nested within their appropriate
+scope
+- Enhanced file parsing to improve performance
+
+### Fixed
+
+- Fixed issue where symbol highlighting did not highlight all occurrences of the
+symbol within its scope
+- Fixed issue where renaming a function parameter did not rename all occurrences
+within the function scope
+
 ## [0.2.4]
 
 ### Added
 
-- Copy MUD Path context-menu entry (right-click on the explorer window file or document tab) to get the MUD specific path to the a file.
+- Copy MUD Path context-menu entry (right-click on the explorer window file or 
+document tab) to get the MUD specific path to the a file.
 
 ### Updated
 
 - LPC Grammar so that `efun::` is properly recognized
 - LPC Grammar to support class initializers
+- LPC Grammer to support `case` ranges
 
 ### Fixed
 
