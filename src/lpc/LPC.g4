@@ -523,7 +523,7 @@
 	* The formal referencing of a class identifier
 	*/
 	classIdentifier
-		:	Class identifier
+		:	accessLevelModifier? Class identifier
 		;
 
 	/*
