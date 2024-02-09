@@ -8,7 +8,7 @@
 		"content"
 	],
 	"publisher": "rise-of-praxis",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"engines": {
 		"vscode": "^1.61.0"
 	},
@@ -44,11 +44,11 @@
 		"configuration": {
 			"title": "LPC Remote Editor for LP MUDs",
 			"properties": {
-				"lpcRemoteEditor.useOutputChannel": {
-					"title": "Use Debug Output Channel",
+				"lpcRemoteEditor.connectionDebugging": {
+					"title": "Output Client Communication",
 					"type": "boolean",
 					"default": false,
-					"description": "Creates a channel in the Output Window containing debugging information."
+					"description": "Creates a 'Remote Editor' channel in the Output Window containing debugging information."
 				},
 				"lpcRemoteEditor.enableLanguageFeatures": {
 					"title": "Enable LPC Language Features",
