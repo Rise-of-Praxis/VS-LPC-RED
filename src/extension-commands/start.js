@@ -1,4 +1,4 @@
-const { workspace, window, ExtensionContext, commands } = require('vscode');
+const {  window, ExtensionContext, commands, Uri } = require('vscode');
 const createRemoteEditorClient = require('../client');
 const { getConfiguration } = require('../utilities/configuration');
 
@@ -12,7 +12,7 @@ module.exports = async (context) =>
 	const { mudName, name } = await client.who();
 
 	const config = getConfiguration();
-	if(config.addMyRealmFolderOnStartup)
+	if (config.addMyRealmFolderOnStartup)
 	{
 		const realmUri = client.getFileUri(`/realms/${name}`);
 		await commands.executeCommand('lpc-remote-editor.addMyRealms', context, realmUri, config.myRealmTitle);
