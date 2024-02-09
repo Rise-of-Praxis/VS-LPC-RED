@@ -4,6 +4,7 @@ const { existsSync, mkdirSync } = require('fs');
 const { dirname } = require('path');
 const { getConfiguration } = require('../utilities/configuration');
 const { LanguageId } = require("../lpc-lang");
+const { createRemoteEditorClient } = require('../clients');
 
 function getLocalWorkspacePath()
 {
@@ -30,7 +31,6 @@ function getLocalWorkspacePath()
 
 /**
  * Turns on auto-save
- * @param {Uri} baseUri The URI that is the base of saving local files
  */
 function enableAutoSave()
 {
@@ -67,16 +67,28 @@ let registeredFileSystem = false;
 
 /**
  * 
- * @param {ExtensionContext} context 
+ * @param {import("vscode").ExtensionContext} context 
  */
 module.exports = async (context) =>
 {
 	if (registeredFileSystem)
 		return;
 
-	const fileSystem = new FileSystem();
-	context.subscriptions.push(workspace.registerFileSystemProvider(fileSystem.scheme, fileSystem, { isCaseSensitive: true }));
+	const client = await createRemoteEditorClient();
+	client.on('disconnected', () =>
+	{
+		registeredFileSystem = false;
+		fileSystemProvider.dispose();
+
+		const messageOptions = { modal: true, detail: 'The connection to the MUD was dropped.  You need to reload the workspace to reconnect.' };
+		window.showErrorMessage('Mud connection was dropped.', messageOptions);
+	});
+
+	const fileSystem = new FileSystem(client);
+	const fileSystemProvider = workspace.registerFileSystemProvider(fileSystem.scheme, fileSystem, { isCaseSensitive: true })
+	context.subscriptions.push(fileSystemProvider);
 	registeredFileSystem = true;
 
 	enableAutoSave();
 }
+
