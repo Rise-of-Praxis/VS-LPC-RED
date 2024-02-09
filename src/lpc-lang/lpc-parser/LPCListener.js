@@ -170,7 +170,15 @@ var LPCListener = /*#__PURE__*/function (_antlr4$tree$ParseTre) {
 
   }, {
     key: "exitClassMembers",
-    value: function exitClassMembers(ctx) {} // Enter a parse tree produced by LPCParser#variableModifier.
+    value: function exitClassMembers(ctx) {} // Enter a parse tree produced by LPCParser#classMemberInitializer.
+
+  }, {
+    key: "enterClassMemberInitializer",
+    value: function enterClassMemberInitializer(ctx) {} // Exit a parse tree produced by LPCParser#classMemberInitializer.
+
+  }, {
+    key: "exitClassMemberInitializer",
+    value: function exitClassMemberInitializer(ctx) {} // Enter a parse tree produced by LPCParser#variableModifier.
 
   }, {
     key: "enterVariableModifier",

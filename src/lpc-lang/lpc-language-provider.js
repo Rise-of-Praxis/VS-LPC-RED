@@ -12,7 +12,9 @@ const documentSymbolMapping = {
 }
 
 const scopeBlocks = [
-	LPCParser.RULE_lpcProgram, LPCParser.RULE_block
+	LPCParser.RULE_lpcProgram
+	, LPCParser.RULE_block
+	, LPCParser.RULE_functionDeclaration
 ];
 
 const LanguageId = "lpc";
@@ -226,6 +228,39 @@ class LPCLanguageProvider
 		// If the context is a function definition, then check the function declaration's argument list
 		switch (context.ruleIndex)
 		{
+			case LPCParser.RULE_loopStatement:
+				// This is a loop, which can declare the variables.  Based on the type, get the list of possibly declared variables
+				const loopVariables = [];
+				if (context.foreachLoopStatement())
+				{
+					// Get the variable declarations from the foreach control statement
+					const foreachControlStatement = context.foreachLoopStatement().foreachControlStatement();
+					if (foreachControlStatement)
+						loopVariables.push(...foreachControlStatement.foreachVariableList().forLoopVariable());
+				} else if(context.forLoopStatement()) {
+					// Get the variable declarations from the for loop's initial state declaration.  Based on how it is defined,
+					// initialState can occur multiple times
+					const forControlStatement = context.forLoopStatement().forControlStatement();
+					let initialState = forControlStatement ? forControlStatement.forInitialState() : null;
+					while(initialState) {
+						if(initialState.forLoopVariable())
+							loopVariables.push(initialState.forLoopVariable());
+
+						initialState = initialState.forInitialState();
+					}
+				}
+
+				for (const loopVariable of loopVariables)
+				{
+					// If the loop variable doesn't declare a data type, it's not valid
+					if(!loopVariable.dataType())
+						continue;
+
+					if (identifier === this.getContextIdentifierText(loopVariable.variable()))
+						return context;
+				}
+				break;
+
 			case LPCParser.RULE_functionDefinition:
 				//Check the function name first:
 				if (identifier === this.getContextIdentifierText(context.functionDeclaration()))
@@ -681,9 +716,9 @@ class LPCLanguageProvider
 	 */
 	refreshDiagnostics(document, diagnosticCollection)
 	{
-		if(document.languageId !== LanguageId)
+		if (document.languageId !== LanguageId)
 			return;
-		
+
 		const program = this.getParsedLpcProgram(document);
 
 		const diagnostics = program.syntaxErrors.map(({ line, column, msg }) =>
@@ -757,7 +792,8 @@ class LPCLanguageProvider
 				return;
 
 			const ext = extname(uri.path);
-			if (ext === ".c")
+			if (ext === ".c"
+				&& document.languageId !== LanguageId)
 				languages.setTextDocumentLanguage(document, LanguageId);
 		});
 	}

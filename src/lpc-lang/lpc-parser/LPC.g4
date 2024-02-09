@@ -485,6 +485,14 @@ classMembers
 	;
 
 /*
+ * Syntax used when creating a new class with initial values
+ * example: new(class door_side, Rooms : ({ }) )
+ */
+classMemberInitializer
+	:	Identifier Colon expression
+	;
+
+/*
  * Type modifiers applicable to variable
  */
 variableModifier
@@ -934,6 +942,7 @@ functionCall
     :   functionName LeftParen expressionList? RightParen
 	|	ScopeOperator functionCall
 	|	identifier ScopeOperator functionCall 
+	|	Efun ScopeOperator functionCall						// used in efun:: overrides
 	|	Object ScopeOperator functionCall 					// Hack for when someone inherits ".../object" file
     ;
 

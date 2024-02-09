@@ -2,6 +2,21 @@
 
 All notable changes to the "lpc-remote-editor" extension will be documented in this file.
 
+## [0.2.4]
+
+### Added
+
+- Copy MUD Path context-menu entry (right-click on the explorer window file or document tab) to get the MUD specific path to the a file.
+
+### Updated
+
+- LPC Grammar so that `efun::` is properly recognized
+
+### Fixed
+
+- Scoping issue where renaming a variable would rename it everywhere in the file
+- Fixed issue where for and foreach loop variable declarations were not properly detected
+
 ## [0.2.3]
 
 ### Fixed

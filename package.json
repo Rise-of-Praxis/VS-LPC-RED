@@ -8,7 +8,7 @@
 		"content"
 	],
 	"publisher": "rise-of-praxis",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"engines": {
 		"vscode": "^1.61.0"
 	},
@@ -39,8 +39,28 @@
 				"title": "Create new LPC Remote Editor workspace",
 				"category": "Remote Editor for LP MUDs",
 				"command": "lpc-remote-editor.createNewWorkspace"
+			},
+			{
+				"title": "Copy MUD Path",
+				"command": "lpc-remote-editor.copyMudPath"
 			}
 		],
+		"menus": {
+			"explorer/context": [
+				{
+					"when": "resourceLangId == lpc",
+					"command": "lpc-remote-editor.copyMudPath",
+					"group": "6_copypath"
+				}
+			],
+			"editor/title/context": [
+				{
+					"when": "resourceLangId == lpc",
+					"command": "lpc-remote-editor.copyMudPath",
+					"group": "1_cutcopypaste"
+				}
+			]
+		},
 		"configuration": {
 			"title": "LPC Remote Editor for LP MUDs",
 			"properties": {
