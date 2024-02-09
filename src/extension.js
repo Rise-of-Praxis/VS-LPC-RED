@@ -1,4 +1,4 @@
-const { commands, languages } = require("vscode");
+const { commands, languages, workspace, Disposable } = require("vscode");
 const extensionCommands = require('./extension-commands');
 const { LPCLanguageProvider, subscribeToDocumentChanges } = require("./lpc-lang");
 const { getConfiguration } = require("./utilities/configuration");
@@ -19,7 +19,7 @@ function getExtensionId(extensionId)
 
 /**
  * The Remote Editor 
- * @param {ExtensionContext} context 
+ * @param {import("vscode").ExtensionContext} context 
  */
  function activate(context)
 {
@@ -32,7 +32,7 @@ function getExtensionId(extensionId)
 		const commandHandler = extensionCommands[name];
 		const fullCommandName = `${extensionId.id}.${name}`;
 		console.log(`Registering Extension Command '${fullCommandName}'`)
-		const command = commands.registerCommand(fullCommandName, () => commandHandler(context))
+		const command = commands.registerCommand(fullCommandName, () => commandHandler(context));
 		context.subscriptions.push(command);
 	});
 
@@ -43,9 +43,9 @@ function getExtensionId(extensionId)
 		commands.executeCommand('lpc-remote-editor.registerLanguageFeatures', context, config);
 }
 
-
 // this method is called when your extension is deactivated
-function deactivate() { }
+function deactivate() { 
+}
 
 module.exports = {
 	activate,

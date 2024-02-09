@@ -1,4 +1,4 @@
-const { Uri, FileType } = require('vscode');
+const { FileType, FilePermission } = require('vscode');
 const { basename } = require('path');
 const parseDate = require('./parse-date');
 
@@ -14,7 +14,7 @@ const fileInfoPattern = /^([^\t]+)\t(-?\d+)\t([^\t]+)\t([rw-]+)\t([^\t]*)\t([^\t
 /**
  * 
  * @param {string} fileInfo The file information string to parse 
- * @returns {FileInfo}
+ * @returns {import('../../types').FileInfo} Information about the file
  */
 module.exports = (fileInfo) =>
 {
@@ -32,13 +32,18 @@ module.exports = (fileInfo) =>
 	const lockedBy = matches[5];
 	const lockedDate = parseDate(matches[6]);
 
+	const readFlag = access[0] === '-' ? 0 : 1;
+	const writeFlag = access[1] === '-' ? 0 : 2;
+	const permissions = (readFlag && !writeFlag) ? FilePermission.Readonly : 0;
+
 	return {
+		ctime: null,
+		mtime: fileDate.getTime(),
+		type,
+		size: type === FileType.Directory ? 0 : size,
+		permissions,
 		name,
 		path,
-		type,
-		uri: null,
-		size: type === FileType.Directory ? 0 : size,
-		date: fileDate,
 		access,
 		lockedBy,
 		lockedDate

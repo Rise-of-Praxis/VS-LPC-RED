@@ -1,24 +1,25 @@
 const { EventEmitter, Uri, FileSystemError, Disposable, FileType, FileChangeType } = require('vscode');
-const Directory = require('./directory');
-const File = require('./file');
-const createRemoteEditorClient = require('../client');
-const FileStat = require('./file-stat');
+const { RemoteEditorClient } = require('../clients/RemoteEditorClient');
 
 const watchTimeoutMS = 2500;
 
 class RemoteEditorFileSystem
 {
-	constructor()
+	constructor(client)
 	{
+		this.#client = client;
 	}
+
+	/** @type {RemoteEditorClient} */
+	#client;
+
+	/** @type {RemoteEditorClient} */
+	get client() { return this.#client; }
 
 	/*
 	 * The timeout that checks the status of files that are being watched.
 	 */
 	#watchTimeout;
-
-	/** @type {RemoteEditorClient} */
-	#client;
 
 	/** 
 	 * The files currently being warched
@@ -27,50 +28,11 @@ class RemoteEditorFileSystem
 	watchedFiles = new Map();
 
 	/**
-	 * Creates a {@link File} or {@link Directory} for the file information provided
-	 * 
-	 * @param {FileInfo} fileInfo The object containing the file information
-	 * @returns {File | Directory}
-	 */
-	#createFileEntry(fileInfo)
-	{
-		const fileMeta = { ...fileInfo };
-		fileMeta.uri = this.client.getFileUri(fileInfo.path);
-
-		if (fileMeta.type === FileType.Directory)
-			return new Directory(fileMeta);
-		else
-			return new File(fileMeta);
-	}
-
-	#createDirectoryEntry(path, listing)
-	{
-		const directory = new Directory({ name: path });
-		const { entries } = directory;
-
-		listing.forEach((meta) => 
-		{
-			const fileEntry = this.#createFileEntry(meta);
-			entries.set(fileEntry.name, fileEntry);
-		});
-
-		return directory;
-	}
-
-	/**
 	 * The scheme to use in {@link Uri} for links
 	 */
 	get scheme()
 	{
 		return this.client.scheme;
-	}
-
-	get client()
-	{
-		if (!this.#client)
-			this.#client = createRemoteEditorClient();
-
-		return this.#client
 	}
 
 	/**
@@ -91,9 +53,10 @@ class RemoteEditorFileSystem
 	onFileChangeEmitter = new EventEmitter();
 
 	/**
-	 * @type 
+	 * 
+	 * @type {import('vscode').Event<import('vscode').FileChangeEvent[]>}
 	 */
-	onDidChangeFile = this.onFileChangeEmitter.event;
+	get onDidChangeFile() { return this.onFileChangeEmitter.event; }
 
 	/**
 	 * 
@@ -101,27 +64,28 @@ class RemoteEditorFileSystem
 	 * @param {*} options 
 	 * @returns {Disposable}
 	 */
-	async watch(uri, options)
+	watch(uri, options)
 	{
 		let fileInfo = null;
 
 		// See if the file exists
-		try
-		{
-			fileInfo = await this.stat(uri);
-		}
-		catch (err)
-		{
-			if (err.code !== "FileNotFound")
-				throw err;
-
-			// The file does not exist
-		}
-		this.watchedFiles.set(uri.path, fileInfo);
-
-		// If we haven't started watching, start now
-		if (!this.#watchTimeout)
-			this.checkWatchedFiles();
+		this.stat(uri)
+			.then((fileInfo) =>
+			{
+				this.watchedFiles.set(uri.path, fileInfo);
+			})
+			.catch((err) =>
+			{
+				if (err.code !== "FileNotFound")
+					throw err;
+				this.watchedFiles.set(uri.path, null);
+			})
+			.finally(() =>
+			{
+				// If we haven't started watching, start now
+				if (!this.#watchTimeout)
+					this.checkWatchedFiles();
+			});
 
 		return new Disposable(() =>
 		{
@@ -133,7 +97,7 @@ class RemoteEditorFileSystem
 	{
 		this.watchedFiles.forEach(async (lastInfo, path) =>
 		{
-			const uri = this.#client.getFileUri(path);
+			const uri = this.client.getFileUri(path);
 			let currentInfo;
 			try
 			{
@@ -167,7 +131,7 @@ class RemoteEditorFileSystem
 	 * Gets information about about a single file
 	 *  
 	 * @param {Uri} uri The path of the file to return
-	 * @returns {Promise<FileStat>}
+	 * @returns {Promise<import('../types').FileInfo>}
 	 */
 	async stat(uri)
 	{
@@ -187,12 +151,12 @@ class RemoteEditorFileSystem
 		if (!results)
 			throw FileSystemError.FileNotFound(uri);
 
-		const directory = this.#createDirectoryEntry(uri.path, results);
-
 		/** @type {[string, FileType][]} */
 		const entries = [];
-		for (const [name, entry] of directory.entries)
-			entries.push([name, entry.type]);
+		for (const entry of results)
+		{
+			entries.push([entry.name, entry.type]);
+		}
 
 		return entries;
 	}
@@ -200,7 +164,7 @@ class RemoteEditorFileSystem
 	async createDirectory(uri)
 	{
 		this.#validateUri(uri);
-		return await this.client.createDirectory(uri.path);
+		return this.client.createDirectory(uri.path);
 	}
 
 	/**

@@ -2,6 +2,7 @@ const { Uri, FileType } = require('vscode');
 
 /**
  * @typedef {object} FileInfo
+ * @mixin {FileStat}
  * @property {string} name The name of the file
  * @property {Uri} uri The Uri used to access the file
  * @property {FileType} type The file type
@@ -13,4 +14,4 @@ const { Uri, FileType } = require('vscode');
  * @property {Date} lockedDate The timestamp the file was locked
  */
 
-module.exports = {}
+module.exports = {};
