@@ -8,7 +8,11 @@
         "content"
     ],
     "publisher": "rise-of-praxis",
+<<<<<<< Updated upstream
     "version": "0.6.1",
+=======
+    "version": "0.6.3",
+>>>>>>> Stashed changes
     "engines": {
         "vscode": "^1.84.2"
     },

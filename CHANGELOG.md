@@ -3,6 +3,25 @@
 All notable changes to the "lpc-remote-editor" extension will be documented in 
 this file.
 
+<<<<<<< Updated upstream
+=======
+## [0.6.3]
+
+### Fixed
+
+- Issue where reading some files resulted in the file text being doubled
+
+
+## [0.6.2]
+
+### Fixed
+
+- Connection not properly closing due to VS Code shutting down before cleanup
+  can complete.
+- Searching while another search is performing didn't properly cancel the
+  previous search.
+
+>>>>>>> Stashed changes
 ## [0.6.1]
 
 ### Fixed
