@@ -208,7 +208,7 @@ class RiseOfPraxisClient extends RemoteEditorClient
         // Callback function that handles the server response
         const handleServerResponse = async (responseData) =>
         {
-            buffer += responseData.toString();
+            buffer += responseData.toString("ascii");
             if (!serverResponsePattern.test(buffer))
                 return handleError(`Server sent invalid response: ${buffer}`);
 
