@@ -3,6 +3,14 @@
 All notable changes to the "lpc-remote-editor" extension will be documented in 
 this file.
 
+## [0.4.2]
+
+### Fixed
+
+- Support for fetching large files
+- Support for renaming/moving directories
+
+
 ## [0.4.1]
 
 ### Fixed

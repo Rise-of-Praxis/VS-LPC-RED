@@ -255,21 +255,23 @@ class RemoteEditorFileSystem
 			return this.client.deleteFile(uri.path, options);
 		else
 			return this.client.deleteDirectory(uri.path, options);
-	}
+    }
+    
+    /**
+     * Renames a file/directory
+     * 
+	 * @param {Uri} oldUri The path of the source file/directory
+	 * @param {Uri} newUri The path of the target file/directory
+	 * @param {object} options Options used for copying the file/directory
+     */
 
 	async rename(oldUri, newUri, options)
 	{
 		this.#validateUri(newUri);
 		await this.#waitForAvailableClient();
 
-		if (!await this.client.copy(oldUri.path, newUri.path, options))
-			throw new FileSystemError(`Failed to copy ${oldUri.path} to ${newUri.path}`);
-
-		if (!await this.client.deleteFile(oldUri.path))
-		{
-			await this.client.deleteDirectory(newUri.path);
-			throw new FileSystemError(`Failed to remove ${oldUri.path} during the rename.`);
-		}
+		if (!await this.client.rename(oldUri.path, newUri.path, options))
+			throw new FileSystemError(`Failed to rename ${oldUri.path} to ${newUri.path}`);
 	}
 }
 
