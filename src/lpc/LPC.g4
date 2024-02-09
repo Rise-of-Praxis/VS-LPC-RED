@@ -178,6 +178,8 @@
 
 	LineComment			: '//' ~[\r\n]*;
 
+    MultipleLine        : '\\';
+
 	DefinePreprocessor	: '#define'
 						;
 
